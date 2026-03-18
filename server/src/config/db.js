@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { env } from "./env.js";
+import logger from "../utils/logger.js";
 
 const MONGO_OPTIONS={
     serverSelectionTimeoutMS: 5000,
@@ -17,6 +18,7 @@ async function connectdb() {
         console.log(`✅  Mongoose connected → ${mongoose.connection.name}`);
     } catch (error) {
         console.error(error.message);
+        logger.error(error.message);
         throw error;
     }
 }
@@ -28,14 +30,15 @@ async function disconnectdb() {
         console.log("Mongoose disconnected successfully!");
     } catch (error) {
         console.error(error.message);
+        logger.error(error.message);
         throw error;
     }
 }
 mongoose.connection.on('disconnected', () => {
-  console.warn('MongoDB disconnected — attempting reconnect...');
+  logger.warn('MongoDB disconnected — attempting reconnect...');
 });
 
 mongoose.connection.on('reconnected', () => {
-  console.info('MongoDB reconnected');
+  logger.info('MongoDB reconnected');
 });
 export { connectdb, disconnectdb };

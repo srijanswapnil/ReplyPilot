@@ -1,10 +1,29 @@
-import dotenv from "dotenv";
-import app from "./src/app.js";
+import app from "./src/app";
+import { connectdb, disconnectdb } from "./src/config/db";
+import { env } from "./src/config/env";
 
-dotenv.config();
+let server;
+connectdb()
+    .then(() => {
+        app.on("error", (error) => {
+            console.log("Error!!", error);
+            throw error;
+        });
+        server = app.listen(env.PORT, () => {
+            console.log(
+                `Mongodb is connected successfully to port:${env.PORT}`
+            );
+        });
+    })
+    .catch((error) => {
+        console.log("MONGODB failed to connect!!!", error);
+        process.exit(1);
+    });
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+["SIGTERM", "SIGINT"].forEach((sig) =>
+    process.on(sig, async () => {
+        console.info(`Caught ${sig} dranning...`);
+        await disconnectdb();
+        server.close(() => process.exit(0));
+    })
+);

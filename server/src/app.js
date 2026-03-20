@@ -1,5 +1,6 @@
 import { env } from "./config/env.js";
 
+import { ApiError } from "./utils/ApiError.js";
 import globalErrorHandler from "./middleware/error.middleware.js";
 
 import express from "express";

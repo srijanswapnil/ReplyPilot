@@ -12,10 +12,16 @@ const envSchema=z.object({
     GOOGLE_CLIENT_SECRET:z.string().min(1,'GOOGLE_CLIENT_SECRET is required'),
     GOOGLE_REDIRECT_URI:z.string().min(1,'GOOGLE_REDIRECT_URI is required'),
 
+    SESSION_SECRET:z.string().min(1,'SESSION_SECRET is required'),
+
     CORS_WHITELIST: z
     .string()
     .default("http://localhost:5173")
     .transform((val) => val.split(",").map((url) => url.trim())),
+    
+    CLIENT_URL:z.string().default('http://localhost:5173'),
+
+    REDIS_URL: z.string().min(1,'REDIS_URL is required!'),
 
 });
 

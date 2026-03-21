@@ -2,32 +2,47 @@ import { env } from "./config/env.js";
 
 import { ApiError } from "./utils/ApiError.js";
 import globalErrorHandler from "./middleware/error.middleware.js";
+import cors_option from "./config/cors.js";
 
+import { RedisStore } from "connect-redis";
+import session from "express-session";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
-import rateLimit from "express-rate-limit";
+import passport from 'passport';
+import "./config/passport.js";
+
 
 const app=express();
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ limit: "16kb", extended: true }));
 app.use(express.static("public"));
-app.use(cors(env.CORS_WHITELIST));
+app.use(cors(cors_option));
 app.use(helmet());
 app.use(cookieParser());
 
-const limiter = rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    message:
-        "Too many requests from this IP, please try again after 10 minutes",
-});
+app.use(session({
+  name: 'sid',
+  store: new RedisStore({ client: redis, prefix: 'session:' }),
+  secret: env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure:   env.NODE_ENV === 'production',
+    maxAge:   7 * 24 * 60 * 60 * 1000, //7 days
+    sameSite: 'lax',
+  },
+}));
 
-app.use("/api",limiter);
+app.use(passport.initialize());
+app.use(passport.session());
+
+import { apilimiter, authLimiter } from "./middleware/rateLimiter.middleware.js";
+app.use("/api",apilimiter);
+app.use("/api/auth",authLimiter);
 
 app.use("/health", (req, res) => {
     res.status(200).json({
@@ -39,7 +54,7 @@ app.use("/health", (req, res) => {
 });
 
 import authRoute from "./routes/auth.routes.js";
-app.use("/api/auth/google", authRoute);
+app.use("/api/auth", authRoute);
 
 import youtubeRoute from "./routes/youtube.routes.js";
 app.use("/api/youtube",youtubeRoute);

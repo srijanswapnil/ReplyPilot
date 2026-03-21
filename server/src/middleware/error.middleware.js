@@ -1,17 +1,24 @@
 import { env } from "../config/env.js";
+import logger from '../utils/logger.js';
 
 function globalErrorHandler(error, req, res, next) {
-    error.statusCode = error.statusCode || 500;
-    error.message = error.message || "Internal Server Error";
-    console.log(error.message);
-    if (error)
-        return res.status(error.statusCode).json({
-            success: false,
-            message: error.message,
-            ...(env.NODE_ENV === "development" && {
-                stack: error.stack || null,
-            }),
-        });
-    next();
+    const status = error.status || error.statusCode || 500;
+
+  logger.error(`${req.method} ${req.path} → ${status}`, {
+    message: error.message,
+    stack:   env.NODE_ENV === 'development' ? error.stack : undefined,
+  });
+
+  if (error?.response?.data?.error?.code === 403) {
+    return res.status(403).json({
+      error: 'YouTube API quota exceeded or permission denied',
+      details: err.response.data.error.message,
+    });
+  }
+
+  res.status(status).json({
+    error:   error.message || 'Internal server error',
+    ...(env.NODE_ENV === 'development' && { stack: error.stack }),
+  });
 }
 export default globalErrorHandler;

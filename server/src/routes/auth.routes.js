@@ -22,8 +22,8 @@ router
 }));
 
 router
-.get("/google/callback")
-.route(
+.route("/google/callback")
+.get(
     passport.authenticate('google',{failureRedirect:`${env.CLIENT_URL}/login?error=oauth`}),
     (req,res)=>{
         res.redirect(`${env.CLIENT_URL}/dashboard`);

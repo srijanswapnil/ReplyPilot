@@ -3,6 +3,7 @@ import { env } from "./config/env.js";
 import { ApiError } from "./utils/ApiError.js";
 import globalErrorHandler from "./middleware/error.middleware.js";
 import cors_option from "./config/cors.js";
+import redis from "./config/redis.js";
 
 import { RedisStore } from "connect-redis";
 import session from "express-session";
@@ -56,11 +57,11 @@ app.use("/health", (req, res) => {
 import authRoute from "./routes/auth.routes.js";
 app.use("/api/auth", authRoute);
 
-import youtubeRoute from "./routes/youtube.routes.js";
-app.use("/api/youtube",youtubeRoute);
+// import youtubeRoute from "./routes/youtube.routes.js";
+// app.use("/api/youtube",youtubeRoute);
 
-import commentRoute from "./routes/comments.routes.js";
-app.use("/api/comment",commentRoute);
+// import commentRoute from "./routes/comments.routes.js";
+// app.use("/api/comment",commentRoute);
 
 app.use((req, res, next) => {
     res.status(400).json(

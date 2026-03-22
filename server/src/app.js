@@ -26,14 +26,19 @@ app.use(cookieParser());
 
 app.use(session({
   name: 'sid',
-  store: new RedisStore({ client: redis, prefix: 'session:' }),
+  store: new RedisStore({
+    client: redis,
+    prefix: 'session:',
+    ttl: 60 * 60 * 24 * 7,
+  }),
   secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  rolling: true,
   cookie: {
     httpOnly: true,
-    secure:   env.NODE_ENV === 'production',
-    maxAge:   7 * 24 * 60 * 60 * 1000, //7 days
+    secure: env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: 'lax',
   },
 }));
@@ -49,13 +54,16 @@ app.use("/health", (req, res) => {
     res.status(200).json({
         status: "OK",
         success: true,
-        date: new Date.toISOString(),
+        date: new Date().toISOString(),
         timezone: "IST",
     });
 });
 
 import authRoute from "./routes/auth.routes.js";
 app.use("/api/auth", authRoute);
+
+import viewRoutes from "./routes/view.routes.js";
+app.use("/", viewRoutes);
 
 // import youtubeRoute from "./routes/youtube.routes.js";
 // app.use("/api/youtube",youtubeRoute);
@@ -64,8 +72,8 @@ app.use("/api/auth", authRoute);
 // app.use("/api/comment",commentRoute);
 
 app.use((req, res, next) => {
-    res.status(400).json(
-        new ApiError(400, `Route not found for ${req.originalUrl}`)
+    res.status(404).json(
+        new ApiError(404, `Route not found for ${req.originalUrl}`)
     );
 });
 

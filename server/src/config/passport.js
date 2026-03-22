@@ -37,12 +37,19 @@ passport.use(
                 );
 
                 const TTL=55*60; //55 min
-                await redis.setex(keys.ytAccessToken(user._id.toString(),TTL,accessToken));
-                await redis.setex(
-                    keys.ytTokenExpiry(user._id.toString()),
-                    TTL,
-                    String(Date.now()+TTL*1000)
-                );
+               
+
+await redis.set(
+  keys.ytAccessToken(user._id.toString()),
+  accessToken,
+  { EX: TTL }
+);
+
+await redis.set(
+  keys.ytTokenExpiry(user._id.toString()),
+  String(Date.now() + TTL * 1000),
+  { EX: TTL }
+);
                 logger.info(`OAuth success for user ${user.email}`);
                 return done(null,user);
             } catch (error) {

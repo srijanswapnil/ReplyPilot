@@ -24,9 +24,11 @@ router
 router
 .route("/google/callback")
 .get(
-    passport.authenticate('google',{failureRedirect:`${env.CLIENT_URL}/login?error=oauth`}),
+    passport.authenticate('google', {
+        failureRedirect: `/login?error=oauth`
+    }),
     (req,res)=>{
-        res.redirect(`${env.CLIENT_URL}/dashboard`);
+        res.redirect("/dashboard");
     }
 );
 
@@ -41,7 +43,7 @@ router.route("/logout").post(authMiddleware,(req,res,next)=>{
         req.session.destroy((err)=>{
             if(err)return next(err);
 
-            res.clearCookie('connect.sid');
+            res.clearCookie('sid');
             res.json({message:'Logged Out Successfully'});
         })
     })

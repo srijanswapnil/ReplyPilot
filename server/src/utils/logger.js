@@ -1,23 +1,78 @@
-import winston from 'winston';
-import { env } from '../config/env.js';
+import winston from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
 
-const { combine, timestamp, printf, colorize, json } = winston.format;
+const { combine, timestamp, errors, json, printf, colorize } = winston.format;
 
-const devFormat = combine(
-  colorize(),
-  timestamp({ format: 'HH:mm:ss' }),
-  printf(({ level, message, timestamp, ...meta }) => {
-    const metaStr = Object.keys(meta).length ? ' ' + JSON.stringify(meta) : '';
-    return `${timestamp} [${level}] ${message}${metaStr}`;
-  })
-);
+const isProduction = process.env.NODE_ENV === "production";
 
-const prodFormat = combine(timestamp(), json());
+/*
+Console format (for development)
+*/
+const consoleFormat = printf(({ level, message, timestamp, stack }) => {
+  return `${timestamp} ${level}: ${stack || message}`;
+});
+
+/*
+File transport with rotation
+*/
+const fileRotateTransport = new DailyRotateFile({
+  dirname: "logs",
+  filename: "app-%DATE%.log",
+  datePattern: "YYYY-MM-DD",
+  maxSize: "20m",
+  maxFiles: "14d",
+});
+
+/*
+Error log rotation
+*/
+const errorRotateTransport = new DailyRotateFile({
+  dirname: "logs",
+  filename: "error-%DATE%.log",
+  level: "error",
+  datePattern: "YYYY-MM-DD",
+  maxSize: "20m",
+  maxFiles: "30d",
+});
 
 const logger = winston.createLogger({
-  level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: env.NODE_ENV === 'production' ? prodFormat : devFormat,
-  transports: [new winston.transports.Console()],
+  level: isProduction ? "info" : "debug",
+
+  format: combine(
+    timestamp(),
+    errors({ stack: true }),
+    json()
+  ),
+
+  defaultMeta: { service: "replypilot-api" },
+
+  transports: [
+    fileRotateTransport,
+    errorRotateTransport
+  ],
+
+  exceptionHandlers: [
+    new winston.transports.File({ filename: "logs/exceptions.log" })
+  ],
+
+  rejectionHandlers: [
+    new winston.transports.File({ filename: "logs/rejections.log" })
+  ],
 });
+
+/*
+Console logging for development
+*/
+if (!isProduction) {
+  logger.add(
+    new winston.transports.Console({
+      format: combine(
+        colorize(),
+        timestamp(),
+        consoleFormat
+      ),
+    })
+  );
+}
 
 export default logger;

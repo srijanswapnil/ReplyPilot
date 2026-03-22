@@ -4,6 +4,7 @@ import { ApiError } from "./utils/ApiError.js";
 import globalErrorHandler from "./middleware/error.middleware.js";
 import cors_option from "./config/cors.js";
 import redis from "./config/redis.js";
+import requestLogger from "./middleware/requestLogger.middleware.js";
 
 import { RedisStore } from "connect-redis";
 import session from "express-session";
@@ -23,6 +24,8 @@ app.use(express.static("public"));
 app.use(cors(cors_option));
 app.use(helmet());
 app.use(cookieParser());
+
+app.use(requestLogger);
 
 app.use(session({
   name: 'sid',

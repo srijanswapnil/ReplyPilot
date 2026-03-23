@@ -42,8 +42,8 @@ export default async function(req,res,next){
         const newExpiresAt = credentials.expiry_date ?? Date.now() + 60*60*1000;
         const ttlSeconds = Math.floor((newExpiresAt-Date.now())/1000);
 
-        await redis.setex(keys.ytAccessToken(userId),ttlSeconds,newAccessToken);
-        await redis.setex(keys.ytTokenExpiry(userId),ttlSeconds,String(newExpiresAt));
+        await redis.set(keys.ytAccessToken(userId),newAccessToken,{ EX: ttlSeconds });
+        await redis.set(keys.ytTokenExpiry(userId),String(newExpiresAt),{ EX: ttlSeconds });
 
         logger.debug('Access Token refreshed for user:',userId);
 

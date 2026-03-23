@@ -15,4 +15,60 @@ export const getChannelInfo = async () => {
 
   return response.data;
 };
+export const getChannelVideosInfo = async (channelId) => {
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
+  const response = await youtube.search.list({
+    part: "snippet",
+    channelId,
+    maxResults: 20, // adjust as needed
+    order: "date",
+  });
+
+  return response.data.items.map(item => ({
+    videoId: item.id.videoId,
+    title: item.snippet.title,
+    description: item.snippet.description,
+    publishedAt: item.snippet.publishedAt,
+    thumbnails: item.snippet.thumbnails,
+  }));
+};
+
+export const getVideoInfo = async (videoId) => {
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+
+  const response = await youtube.videos.list({
+    part: "snippet,statistics,contentDetails",
+    id: videoId,
+  });
+
+  return response.data.items[0];
+};
+
+export const getVideoCommentsInfo = async (videoId) => {
+  const youtube = google.youtube({ version: "v3", auth: oauth2Client });
+
+  const response = await youtube.commentThreads.list({
+    part: "snippet,replies",
+    videoId,
+    maxResults: 30,
+    textFormat: "plainText",
+  });
+
+  return response.data.items.map(item => {
+    const snippet = item.snippet.topLevelComment.snippet;
+    return {
+      ytCommentId: item.snippet.topLevelComment.id,
+      videoId,
+      channelId: snippet.channelId,
+      text: snippet.textOriginal,
+      authorName: snippet.authorDisplayName,
+      authorChannelId: snippet.authorChannelId,
+      authorAvatar: snippet.authorProfileImageUrl,
+      likeCount: snippet.likeCount,
+      replyCount: item.snippet.totalReplyCount,
+      publishedAt: snippet.publishedAt,
+      updatedAt: snippet.updatedAt,
+    };
+  });
+};

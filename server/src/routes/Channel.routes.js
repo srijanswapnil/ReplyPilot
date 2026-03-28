@@ -1,7 +1,9 @@
 import express from 'express';
 
+import authMiddleware from '../middleware/auth.middleware.js';
+import youtubeTokenMiddleware from '../middleware/youtubeToken.middleware.js';
+
 import {
-  fetchChannel,
   getChannelDetails,
   getChannelVideos,
   getVideoDetails,
@@ -10,12 +12,15 @@ import {
 
 const router = express.Router();
 
-router.get('/channel', fetchChannel);
+const protect = [authMiddleware,youtubeTokenMiddleware];
 
-router.get('/channel/:channelId', getChannelDetails);
-router.get('/channel/:channelId/videos', getChannelVideos);
-router.get('/video/:videoId', getVideoDetails);
-router.get('/video/:videoId/comments', getVideoComments);
+router.route("/").get(protect,getChannelDetails);
+
+router.route("/videos").get(protect,getChannelVideos);
+
+router.route("/videos/:videoId").get(protect,getVideoDetails);
+
+router.route("/videos/:videoId/comments").get(protect,getVideoComments);
 
 
 export default router;

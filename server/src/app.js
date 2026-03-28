@@ -68,8 +68,8 @@ app.use("/api/auth", authRoute);
 import viewRoutes from "./routes/view.routes.js";
 app.use("/", viewRoutes);
 
-// import youtubeRoute from "./routes/youtube.routes.js";
-// app.use("/api/youtube",youtubeRoute);
+import ChannelRoutes from "./routes/Channel.routes.js";
+app.use("/api/channel",ChannelRoutes);
 
 // import commentRoute from "./routes/comments.routes.js";
 // app.use("/api/comment",commentRoute);

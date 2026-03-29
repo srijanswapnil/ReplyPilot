@@ -1,4 +1,3 @@
-import { getChannelInfo } from "../services/Channel.service.js";
 import Channel from "../models/Channel.models.js";
 import Video from "../models/Video.models.js";
 import Comment from "../models/Comment.models.js";

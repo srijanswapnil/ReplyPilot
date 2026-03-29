@@ -1,4 +1,4 @@
-import Comment from "../models/Comment.models";
+import Comment from "../models/Comment.models.js";
 
 const VALID_INTENTS = ['question', 'praise', 'criticism', 'spam', 'neutral', 'pending'];
 const VALID_SORT    = ['publishedAt', 'likeCount'];

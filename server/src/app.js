@@ -71,8 +71,8 @@ app.use("/", viewRoutes);
 import ChannelRoutes from "./routes/Channel.routes.js";
 app.use("/api/channel",ChannelRoutes);
 
-// import commentRoute from "./routes/comments.routes.js";
-// app.use("/api/comment",commentRoute);
+import CommentRoutes from "./routes/comments.routes.js";
+app.use("/api/comments",CommentRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json(

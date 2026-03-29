@@ -6,7 +6,7 @@ import {
   getPersona,
   updatePersona,
   deletePersona,
-} from '../controllers/persona.controller.js';
+} from '../controllers/Persona.controller.js';
 
 const router = express.Router();
 

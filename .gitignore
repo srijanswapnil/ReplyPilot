@@ -56,3 +56,6 @@ docker-compose.override.yml
 *.tmp
 *.swp
 
+# Personal prep 
+interview_prep_guide.md
+

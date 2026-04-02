@@ -20,23 +20,29 @@ export async function enqueueBatch(req, res, next) {
         .json({ error: 'Video not found or does not belong to you' });
     }
 
-    /* ── 2. Atomic claim: pending → processing ────────────────────── */
-    const claimFilter = { videoId, classificationStatus: 'pending' };
-    if (commentIds?.length) claimFilter._id = { $in: commentIds };
+   /* ── 2. Identify pending comments to claim ───────────────────── */
+    const pendingFilter = { videoId, classificationStatus: 'pending' };
+    if (commentIds?.length) pendingFilter._id = { $in: commentIds };
 
-    const { modifiedCount } = await Comment.updateMany(claimFilter, {
-      $set: { classificationStatus: 'processing' },
-    });
+    const toClaim = await Comment.find(pendingFilter).select('_id').lean();
 
-    if (modifiedCount === 0) {
+    if (toClaim.length === 0) {
       return res.json({ message: 'No pending comments to process', queued: 0 });
     }
 
-    /* ── 3. Read back claimed comments ────────────────────────────── */
-    const readFilter = { videoId, classificationStatus: 'processing' };
-    if (commentIds?.length) readFilter._id = { $in: commentIds };
+    const claimIds = toClaim.map((c) => c._id);
 
-    const claimed = await Comment.find(readFilter)
+    /* ── 3. Atomic claim by specific IDs ──────────────────────────── */
+    await Comment.updateMany(
+      { _id: { $in: claimIds }, classificationStatus: 'pending' },
+      { $set: { classificationStatus: 'processing' } },
+    );
+
+    /* ── 4. Read back only the IDs we intended to claim ───────────── */
+    const claimed = await Comment.find({
+      _id: { $in: claimIds },
+      classificationStatus: 'processing',
+    })
       .select('_id ytCommentId text')
       .lean();
 
@@ -53,6 +59,7 @@ export async function enqueueBatch(req, res, next) {
             tone,
             personaId: personaId || null,
           },
+          opts: { jobId: `classify:${c._id.toString()}` },
         }));
         await enqueueClassifyBulk(jobs);
       }

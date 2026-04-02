@@ -88,3 +88,13 @@ export async function enqueueBatch(req, res, next) {
     next(err);
   }
 }
+
+export async function getBatchStatus(req, res, next) {
+  try {
+    const status = await getJobStatus(req.params.jobId);
+    if (!status) return res.status(404).json({ error: 'Job not found' });
+    return res.json({ data: status });
+  } catch (err) {
+    next(err);
+  }
+}

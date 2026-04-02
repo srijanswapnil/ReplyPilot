@@ -9,7 +9,6 @@ import VideoMapper from "../mapper/Video.mapper.js";
 import Video from "../models/Video.models.js";
 import CommentMapper from "../mapper/Comment.mapper.js";
 import Comment from "../models/Comment.models.js";
-import { enqueueClassifyJobsForVideo } from "../jobs/commentFetch.job.js";
 
 export const getChannelInfo = async (AccessToken,userId) => {
   const yt=buildYoutubeClient(AccessToken);
@@ -27,7 +26,7 @@ export const getChannelInfo = async (AccessToken,userId) => {
 
   const ChannelData=ChannelMapper(channel,userId);
 
-  const saved = await Channel.findByIdAndUpdate(
+  const saved = await Channel.findOneAndUpdate(
     {channelId:channel.id},
     ChannelData,
     {upsert:true,new:true},
@@ -122,7 +121,7 @@ export const getChannelVideosInfo = async (accessToken,userId,options={}) => {
 };
 
 export const getVideoInfo = async (videoId) => {
-  const yt = buildYouTubeClient(accessToken);
+  const yt = buildYoutubeClient(accessToken);
 
   const response = await yt.videos.list({
     part: ['snippet', 'statistics', 'contentDetails', 'status', 'localizations'],
@@ -228,11 +227,6 @@ export const getVideoCommentsInfo = async (accessToken, videoId, options = {}) =
 
   logger.info(`Synced ${allComments.length} comments for video ${videoId}`);
 
-  // Fire classify jobs for every comment just saved.
-  // Uses addBulk() → single Redis round-trip regardless of comment count.
-  // Placed here (before the if/fetchAll split) so both return paths trigger it.
-  const userId = video?.userId?.toString();
-  await enqueueClassifyJobsForVideo(allComments, userId);
 
   if (fetchAll) {
     return { items: allComments, totalSynced: allComments.length };

@@ -1,8 +1,9 @@
 import { Queue } from 'bullmq';
 import { env } from '../config/env.js';
 import logger from '../utils/logger.js';
+import { bullConnection } from '../config/redis.js';
 
-const connection = { url: env.REDIS_URL };
+const connection = { client:bullConnection };
 
 const defaultJobOptions = {
   attempts: 3,

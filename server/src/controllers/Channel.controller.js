@@ -8,7 +8,10 @@ import {
   getVideoCommentsInfo
 } from "../services/Channel.service.js";
 import redis, { keys } from "../config/redis.js";
+import logger from "../utils/logger.js";
 
+const CHANNEL_CACHE_TTL = 60 * 10;   // 10 min
+const VIDEO_CACHE_TTL   = 60 * 5;    // 5 min
 
 export async function getChannelDetails(req, res, next) {
   try {

@@ -77,6 +77,9 @@ app.use("/api/comments",CommentRoutes);
 import PersonaRoutes from "./routes/Persona.routes.js";
 app.use("/api/personas",PersonaRoutes);
 
+import BatchRoutes from "./routes/batch.routes.js";
+app.use("/api/batch",BatchRoutes);
+
 app.use((req, res, next) => {
     res.status(404).json(
         new ApiError(404, `Route not found for ${req.originalUrl}`)

@@ -46,4 +46,27 @@ export const enqueuePostReplyJob = (data, opts = {}) =>
 export const enqueueClassifyBulk = (jobs) =>
   classifyQueue.addBulk(jobs); // jobs = [{ name, data, opts }]
 
+export async function getJobStatus(jobId) {
+  // Check all queues
+  for (const queue of [classifyQueue, generateQueue, postReplyQueue]) {
+    const job = await queue.getJob(jobId);
+    if (job) {
+      const state = await job.getState();
+      return {
+        id:       job.id,
+        queue:    queue.name,
+        state,
+        progress: job.progress,
+        data:     job.data,
+        result:   job.returnvalue,
+        failedReason: job.failedReason,
+        processedOn:  job.processedOn,
+        finishedOn:   job.finishedOn,
+      };
+    }
+  }
+  return null;
+}
+
+
 logger.info('BullMQ queues initialised: classify | generate | post-reply');

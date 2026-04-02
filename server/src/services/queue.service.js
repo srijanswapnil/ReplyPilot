@@ -47,7 +47,7 @@ export const enqueueClassifyBulk = (jobs) =>
   classifyQueue.addBulk(jobs); // jobs = [{ name, data, opts }]
 
 export async function getJobStatus(jobId) {
-  // Check all queues
+  
   for (const queue of [classifyQueue, generateQueue, postReplyQueue]) {
     const job = await queue.getJob(jobId);
     if (job) {

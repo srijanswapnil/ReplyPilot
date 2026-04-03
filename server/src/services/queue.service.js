@@ -3,7 +3,7 @@ import { env } from '../config/env.js';
 import logger from '../utils/logger.js';
 import { bullConnection } from '../config/redis.js';
 
-const connection = { client:bullConnection };
+const connection = bullConnection;
 
 const defaultJobOptions = {
   attempts: 3,

@@ -11,6 +11,7 @@ export const generateWorker = new Worker(
   'generate',
   async (job) => {
     const { commentId, tone, personaId } = job.data;
+    let createdReplyId = null;
 
     try {
       const comment = await Comment.findById(commentId);
@@ -50,6 +51,7 @@ export const generateWorker = new Worker(
       });
 
       await reply.save();
+      createdReplyId = reply._id;
 
       // OPTIONAL: If auto-post feature is enabled contextually, we would queue it to postReplyQueue here.
       // But adhering to standard review pipeline, we leave it in 'pending_review'.
@@ -60,12 +62,8 @@ export const generateWorker = new Worker(
     } catch (error) {
       logger.error(`Generate Job ${job.id} failed:`, error.message);
       
-      // If we already created a Reply but it failed, we could update it. 
-      // But usually it fails before creation. If we want, we can upsert a failed reply.
-      const existingReply = await Reply.findOne({ commentId });
-      if (existingReply) {
-          existingReply.status = 'failed';
-          await existingReply.save().catch((err) => logger.error(`Failed to update reply status: ${err.message}`));
+      if (createdReplyId) {
+          await Reply.findByIdAndUpdate(createdReplyId, { status: 'failed' }).catch((err) => logger.error(`Failed to update reply ${createdReplyId} status: ${err.message}`));
       }
 
       throw error; // Let BullMQ handle retries

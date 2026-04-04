@@ -1,4 +1,7 @@
+import { env } from "../config/env.js";
 import Comment from "../models/Comment.models.js";
+import axios from "axios";
+
 
 const VALID_INTENTS = ['question', 'praise', 'criticism', 'spam', 'neutral', 'pending'];
 const VALID_SORT    = ['publishedAt', 'likeCount'];
@@ -13,7 +16,7 @@ export const classifyComment = async (req, res, next) => {
 
     // 2. Call your FastAPI AI Service
     // Ensure your FastAPI is running on port 8000
-    const aiResponse = await axios.post('http://localhost:8000/classify', {
+    const aiResponse = await axios.post(`${env.AI_SERVICE_URL}/classify`, {
       comment_id: id,
       text: comment.textDisplay || comment.content // Match your Schema field name
     });

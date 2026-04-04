@@ -1,10 +1,10 @@
 import axios from 'axios';
+import { env } from '../config/env.js';
 
-const AI_SERVICE_URL = 'http://localhost:8000'; // Your FastAPI address
 
 export const classifyIntent = async (commentText, commentId = "unknown_id") => {
   try {
-    const response = await axios.post(`${AI_SERVICE_URL}/classify`, {
+    const response = await axios.post(`${env.AI_SERVICE_URL}/classify`, {
       comment_id: commentId,
       text: commentText
     });

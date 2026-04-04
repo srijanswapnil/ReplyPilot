@@ -20,13 +20,13 @@ def classify_batch(input: BatchCommentIn):
         "valid": len(results) - spam_count
     }
 
-@app.post("/generate")
-def generate(input: CommentIn, tone: str = "friendly", persona: str = "default"):
-    return generate_reply(input.text, tone=tone, persona=persona)
+# @app.post("/generate")
+# def generate(input: CommentIn, tone: str = "friendly", persona: str = "default"):
+#     return generate_reply(input.text, tone=tone, persona=persona)
 
-@app.post("/generate_batch")
-def generate_batch(input: BatchCommentIn, tone: str = "friendly", persona: str = "default"):
-    results = []
-    for item in input.items:
-        results.append(generate_reply(item.text, tone=tone, persona=persona))
-    return results
+# @app.post("/generate_batch")
+# def generate_batch(input: BatchCommentIn, tone: str = "friendly", persona: str = "default"):
+#     results = []
+#     for item in input.items:
+#         results.append(generate_reply(item.text, tone=tone, persona=persona))
+#     return results

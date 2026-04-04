@@ -1,6 +1,8 @@
 fastapi
 uvicorn
-langchain
-langchain-ollama
+pydantic
 transformers
+torch
 sentencepiece
+openai
+python-dotenv

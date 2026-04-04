@@ -3,7 +3,7 @@ import os
 from app.schemas.comment import CommentIn
 
 # Get the absolute path to your model folder
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "../../model_files")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "../model_files")
 
 # Load the model once (Singleton pattern)
 try:

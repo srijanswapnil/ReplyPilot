@@ -1,29 +1,31 @@
 import { createClient } from "redis";
-import IORedis from "ioredis";
+import Redis from "ioredis";
 import { env } from "./env.js";
 import logger from "../utils/logger.js";
 
 
 // Node-redis (sessions + caching)
 const redis = createClient({
-  url: env.REDIS_URL.trim(),
+    username: env.REDIS_USERNAME,
+    password: env.REDIS_PASSWORD,
+    socket: {
+        host: env.REDIS_URL,
+        port: env.REDIS_PORT,
+    }
 });
 
 redis.on("connect", () => logger.info("Redis (node-redis) connected"));
-redis.on("error", (err) => logger.error("Redis error", err.message));
+redis.on("error", (err) => logger.error("Redis error", err));
 redis.on("reconnecting", () => logger.warn("Redis reconnecting"));
 
 await redis.connect();
 
-// Parse REDIS_QUEUE_URL for IORedis
-const queueUrl = new URL(env.REDIS_QUEUE_URL.trim());
-
 // ioredis (BullMQ)
-console.log(`Connecting to Redis Queue: ${queueUrl.hostname}:${queueUrl.port || 6379}`);
-export const bullConnection = new IORedis({
-  host: queueUrl.hostname,
-  port: parseInt(queueUrl.port) || 6379,
-  password: queueUrl.password,
+export const bullConnection = new Redis({
+  host: env.REDIS_URL,
+  port: env.REDIS_PORT,
+  username: env.REDIS_USERNAME,
+  password: env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
 });
 
@@ -31,7 +33,7 @@ bullConnection.on("connect", () =>
   logger.info("Redis (ioredis) connected for BullMQ")
 );
 bullConnection.on("error", (err) =>
-  logger.error("ioredis error", err.message)
+  logger.error("ioredis error", err)
 );
 
 // Keys

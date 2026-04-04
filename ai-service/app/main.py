@@ -1,19 +1,32 @@
-from classify import classify_comment
-from generate import generate_reply
+from fastapi import FastAPI
+from app.schemas.comment import CommentIn, CommentOut, BatchCommentIn, BatchCommentOut
+from app.services.classify_service import classify_comment
+from app.generate import generate_reply
 
-comments = [
-    "This video is amazing!",
-    "Can you explain the code again?",
-    "This is terrible.",
-    "Buy followers here: spamlink.com"
-]
+app = FastAPI()
 
-for c in comments:
-    classification = classify_comment(c)
-    print("Comment:", c)
-    print("Classification:", classification)
+@app.post("/classify", response_model=CommentOut)
+def classify(input: CommentIn):
+    return classify_comment(input)
 
-    if classification["intent"] != "spam":
-        reply = generate_reply(c, tone="friendly", persona="tech educator")
-        print("Reply:", reply)
-    print("-" * 40)
+@app.post("/classify_batch", response_model=BatchCommentOut)
+def classify_batch(input: BatchCommentIn):
+    results = [classify_comment(item) for item in input.items]
+    spam_count = sum(1 for r in results if r["is_spam"])
+    return {
+        "results": results,
+        "total": len(results),
+        "spam": spam_count,
+        "valid": len(results) - spam_count
+    }
+
+# @app.post("/generate")
+# def generate(input: CommentIn, tone: str = "friendly", persona: str = "default"):
+#     return generate_reply(input.text, tone=tone, persona=persona)
+
+# @app.post("/generate_batch")
+# def generate_batch(input: BatchCommentIn, tone: str = "friendly", persona: str = "default"):
+#     results = []
+#     for item in input.items:
+#         results.append(generate_reply(item.text, tone=tone, persona=persona))
+#     return results

@@ -9,7 +9,7 @@ class CommentIn(BaseModel):
 
 class CommentOut(BaseModel):
     comment_id:  str
-    intent:      Literal["friendly", "professional", "humorous", "promotional","appreciative","informative","supportive","apologetic","neutral"]
+    intent:      Literal["spam", "praise", "criticism", "neutral", "question"]
     confidence:  float = Field(..., ge=0.0, le=1.0)
     is_spam:     bool
     # spam_score is separate from intent confidence —

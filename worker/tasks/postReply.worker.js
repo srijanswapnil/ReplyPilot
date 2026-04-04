@@ -87,8 +87,19 @@ export const postReplyWorker = new Worker(
       reply.publishedAt = new Date();
       await reply.save();
 
-      // 7. Atomic increment of the Comment's reply count
-      await Comment.findByIdAndUpdate(comment._id, { $inc: { replyCount: 1 } });
+      // 7. Increment comment.replyCount at most once per reply (retries must not double-count)
+      const claimResult = await Reply.updateOne(
+        { _id: replyId, replyCountCredited: { $ne: true } },
+        { $set: { replyCountCredited: true } }
+      );
+      if (claimResult.modifiedCount > 0) {
+        try {
+          await Comment.findByIdAndUpdate(comment._id, { $inc: { replyCount: 1 } });
+        } catch (incErr) {
+          await Reply.updateOne({ _id: replyId }, { $set: { replyCountCredited: false } });
+          throw incErr;
+        }
+      }
 
       logger.info(`PostReply Job ${job.id} completed. Posted reply to ${comment.ytCommentId}`);
       return { success: true, ytReplyId };

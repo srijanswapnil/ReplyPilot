@@ -42,6 +42,8 @@ const ReplySchema=new mongoose.Schema(
         },
         publishedAt:{type:Date},
         ytReplyId:{type:String,unique:true},
+        /** Set once comment.replyCount has been incremented for this reply (idempotent across retries). */
+        replyCountCredited:{type:Boolean,default:false},
     },
     {timestamps:true}
 );

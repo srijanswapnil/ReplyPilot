@@ -5,9 +5,10 @@ import { env } from "./src/config/env.js";
 import startSyncCronJob from "./src/jobs/syncComments.job.js";
 
 let server;
+let syncCronTask;
 connectdb()
     .then(() => {
-        startSyncCronJob();
+        syncCronTask = startSyncCronJob();
         app.on("error", (error) => {
             console.log("Error!!", error);
             throw error;
@@ -27,6 +28,10 @@ connectdb()
     process.on(sig, async () => {
         console.info(`Caught ${sig}, draining...`);
 
+        if (syncCronTask) {
+            syncCronTask.stop();
+            console.info("Sync cron job stopped.");
+        }
 
         // 2. Only after workers are shut down, disconnect the database
         try {

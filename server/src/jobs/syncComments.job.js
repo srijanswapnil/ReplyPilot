@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import Channel from "../models/Channel.models.js";
 import Video from "../models/Video.models.js";
-import { getValidYoutubeToken } from "../middleware/youtubeToken.middleware.js";
+import { getValidYoutubeToken } from "../utils/youtubeToken.helper.js";
 import { getVideoCommentsInfo } from "../services/Channel.service.js";
 import logger from "../utils/logger.js";
 
@@ -60,13 +60,25 @@ const syncAllChannelsGlobally = async () => {
     }
 };
 
+let isSyncRunning = false;
+
 // Start the Cron Job to run every 30 minutes!
 // Pattern: "*/30 * * * *" means exactly every 30 minutes, 24/7.
 const startSyncCronJob = () => {
-    cron.schedule("*/30 * * * *", () => {
-        syncAllChannelsGlobally();
+    const task = cron.schedule("*/30 * * * *", async () => {
+        if (isSyncRunning) {
+            logger.warn("[Cron] Skipping scheduled run: previous sync still in progress.");
+            return;
+        }
+        isSyncRunning = true;
+        try {
+            await syncAllChannelsGlobally();
+        } finally {
+            isSyncRunning = false;
+        }
     });
     logger.info("Cron Job Initialized: Synchronizing YouTube Comments every 30 minutes.");
+    return task;
 };
 
 export default startSyncCronJob;

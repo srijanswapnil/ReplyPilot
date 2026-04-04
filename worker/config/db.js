@@ -35,10 +35,12 @@ async function disconnectdb() {
     }
 }
 mongoose.connection.on('disconnected', () => {
+  isConnected = false;
   logger.warn('MongoDB disconnected — attempting reconnect...');
 });
 
 mongoose.connection.on('reconnected', () => {
+  isConnected = true;
   logger.info('MongoDB reconnected');
 });
 export { connectdb, disconnectdb };

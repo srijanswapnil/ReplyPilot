@@ -1,7 +1,15 @@
+import os
+os.environ["PYTORCH_JIT"] = "0"
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from app.schemas.comment import CommentIn, CommentOut, BatchCommentIn, BatchCommentOut
 from app.services.classify_service import classify_comment
-from app.generate import generate_reply
+from app.services.generate import generate_reply_service
+from app.schemas.reply import ReplyRequest, ReplyResponse
+# from app.generate import generate_reply
 
 app = FastAPI()
 
@@ -20,13 +28,17 @@ def classify_batch(input: BatchCommentIn):
         "valid": len(results) - spam_count
     }
 
-# @app.post("/generate")
-# def generate(input: CommentIn, tone: str = "friendly", persona: str = "default"):
-#     return generate_reply(input.text, tone=tone, persona=persona)
+@app.post("/generate", response_model=ReplyResponse)
+async def generate(request: ReplyRequest):
+    """Generates a single reply using Gemma 4 via Hugging Face API."""
+    return await generate_reply_service(request)
 
-# @app.post("/generate_batch")
-# def generate_batch(input: BatchCommentIn, tone: str = "friendly", persona: str = "default"):
-#     results = []
-#     for item in input.items:
-#         results.append(generate_reply(item.text, tone=tone, persona=persona))
-#     return results
+@app.post("/generate_batch")
+async def generate_batch(requests: list[ReplyRequest]):
+    """Generates replies for a batch of comments concurrently."""
+    # Note: If batching many requests, you might want to use asyncio.gather
+    # to send requests to Hugging Face simultaneously for better performance.
+    results = []
+    for req in requests:
+        results.append(await generate_reply_service(req))
+    return results

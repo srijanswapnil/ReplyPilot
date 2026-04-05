@@ -1,44 +1,56 @@
 import os
 os.environ["PYTORCH_JIT"] = "0"
 
-from dotenv import load_dotenv
-load_dotenv()
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import time
 
-from fastapi import FastAPI
-from app.schemas.comment import CommentIn, CommentOut, BatchCommentIn, BatchCommentOut
-from app.services.classify_service import classify_comment
-from app.services.generate import generate_reply_service
-from app.schemas.reply import ReplyRequest, ReplyResponse
-# from app.generate import generate_reply
+from app.core.logging        import setup_logging, get_logger
 
-app = FastAPI()
+from app.api.v1.classify import router as classify_router
+from app.api.v1.generate import router as generate_router
 
-@app.post("/classify", response_model=CommentOut)
-def classify(input: CommentIn):
-    return classify_comment(input)
+setup_logging()
+logger = get_logger(__name__)
 
-@app.post("/classify_batch", response_model=BatchCommentOut)
-def classify_batch(input: BatchCommentIn):
-    results = [classify_comment(item) for item in input.items]
-    spam_count = sum(1 for r in results if r["is_spam"])
-    return {
-        "results": results,
-        "total": len(results),
-        "spam": spam_count,
-        "valid": len(results) - spam_count
-    }
 
-@app.post("/generate", response_model=ReplyResponse)
-async def generate(request: ReplyRequest):
-    """Generates a single reply using Gemma 4 via Hugging Face API."""
-    return await generate_reply_service(request)
+app = FastAPI(
+    title       = "YT Comment AI Service",
+    description = "Intent classification and reply generation for YouTube comments",
+    version     = "1.0.0",
+    docs_url    = "/docs",
+    redoc_url   = "/redoc",
+)
 
-@app.post("/generate_batch")
-async def generate_batch(requests: list[ReplyRequest]):
-    """Generates replies for a batch of comments concurrently."""
-    # Note: If batching many requests, you might want to use asyncio.gather
-    # to send requests to Hugging Face simultaneously for better performance.
-    results = []
-    for req in requests:
-        results.append(await generate_reply_service(req))
-    return results
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins     = ["http://localhost:5000","*"],
+    allow_credentials = False,
+    allow_methods     = ["POST", "GET"],
+    allow_headers     = ["X-Internal-Key", "Content-Type"],
+)
+
+
+@app.middleware("http")
+async def add_process_time(request: Request, call_next):
+    start    = time.perf_counter()
+    response = await call_next(request)
+    elapsed  = (time.perf_counter() - start) * 1000   # ms
+    response.headers["X-Process-Time-Ms"] = f"{elapsed:.1f}"
+    logger.debug(f"{request.method} {request.url.path} → {response.status_code} ({elapsed:.1f}ms)")
+    return response
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Internal server error"},
+    )
+
+
+app.include_router(classify_router, prefix="/api/v1", tags=["classify"])
+app.include_router(generate_router, prefix="/api/v1", tags=["generate"])

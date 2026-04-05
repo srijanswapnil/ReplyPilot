@@ -6,3 +6,4 @@ torch
 sentencepiece
 openai
 python-dotenv
+structlog

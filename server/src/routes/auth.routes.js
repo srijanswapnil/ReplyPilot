@@ -24,10 +24,10 @@ router
 .route("/google/callback")
 .get(
     passport.authenticate('google', {
-        failureRedirect: `/login?error=oauth`
+        failureRedirect: `${env.CLIENT_URL}/login?error=oauth`
     }),
-    (req,res)=>{
-        res.redirect("/dashboard");
+    (req,res)=>{        
+        res.redirect(`${env.CLIENT_URL}/dashboard`);
     }
 );
 

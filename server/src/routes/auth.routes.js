@@ -1,6 +1,7 @@
 import express from "express";
 import passport from "passport";
 import authMiddleware from "../middleware/auth.middleware.js";
+import { env } from "../config/env.js";
 
 
 const router = express.Router();

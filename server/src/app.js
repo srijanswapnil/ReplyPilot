@@ -80,8 +80,8 @@ app.use("/api/personas",PersonaRoutes);
 import BatchRoutes from "./routes/batch.routes.js";
 app.use("/api/batch",BatchRoutes);
 
-// import ReplyRoutes from "./routes/reply.routes.js";
-// app.use("/api/replies", ReplyRoutes);
+ import ReplyRoutes from "./routes/reply.routes.js";
+app.use("/api/replies", ReplyRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json(

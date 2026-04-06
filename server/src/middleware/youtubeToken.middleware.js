@@ -15,7 +15,7 @@ const youtubeTokenMiddleware = async (req, res, next) => {
     req.ytToken = await getValidYoutubeToken(userId);
     next();
   } catch (error) {
-    logger.error("youtubeToken middleware error:", error.message);
+    logger.error("youtubeToken middleware error:", error);
 
     if (error.reAuthNeeded) {
       return res.status(401).json({

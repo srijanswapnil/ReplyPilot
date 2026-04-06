@@ -49,9 +49,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-import { apilimiter, authLimiter } from "./middleware/rateLimiter.middleware.js";
+import csrfProtection from "./middleware/csrf.middleware.js";
+app.use(csrfProtection);
+
+import { apilimiter } from "./middleware/rateLimiter.middleware.js";
 app.use("/api",apilimiter);
-app.use("/api/auth",authLimiter);
 
 app.use("/health", (req, res) => {
     res.status(200).json({

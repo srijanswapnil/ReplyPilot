@@ -4,6 +4,7 @@ import ChannelMapper from "../mapper/Channel.mapper.js";
 import Channel from "../models/Channel.models.js";
 import User from "../models/User.models.js";
 import logger from "../utils/logger.js";
+import { invalidateUserCache } from "../config/passport.js";
 import { fetchAllPages, paginateYT } from "../utils/paginate.js";
 import VideoMapper from "../mapper/Video.mapper.js";
 import Video from "../models/Video.models.js";
@@ -33,6 +34,7 @@ export const getChannelInfo = async (AccessToken,userId) => {
   );
 
   await User.findByIdAndUpdate(userId,{channelId:channel.id});
+  await invalidateUserCache(userId);
 
   logger.info(`Channel Synced: ${saved.title} (${saved.channelId})`);
   return saved;

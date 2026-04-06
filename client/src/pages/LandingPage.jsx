@@ -1,14 +1,36 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+
+const ERROR_MESSAGES = {
+  oauth: 'Google sign-in failed. Please try again.',
+  rate_limit: 'Too many sign-in attempts. Please wait a few minutes and try again.',
+}
 
 export default function LandingPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const errorMsg = useMemo(() => {
+    const code = searchParams.get('error')
+    return code ? (ERROR_MESSAGES[code] || 'Something went wrong. Please try again.') : null
+  }, [searchParams])
 
   useEffect(() => {
     if (!loading && user) navigate('/dashboard', { replace: true })
   }, [user, loading, navigate])
+
+  // Clear error param from URL after showing it (keeps URL clean)
+  useEffect(() => {
+    if (searchParams.has('error')) {
+      const t = setTimeout(() => {
+        searchParams.delete('error')
+        setSearchParams(searchParams, { replace: true })
+      }, 5000)
+      return () => clearTimeout(t)
+    }
+  }, [searchParams, setSearchParams])
 
   if (loading) return (
     <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
@@ -29,6 +51,13 @@ export default function LandingPage() {
           <span className="text-[#ff4444] text-4xl">▶</span>
           <span className="text-white text-3xl font-bold tracking-tight">ReplyPilot</span>
         </div>
+
+        {/* Error banner */}
+        {errorMsg && (
+          <div className="w-full mb-6 px-4 py-3 rounded-lg bg-[#ff4444]/10 border border-[#ff4444]/30 text-[#ff6b6b] text-sm text-center">
+            {errorMsg}
+          </div>
+        )}
 
         {/* Headline */}
         <h1 className="text-4xl font-bold text-white mb-3 leading-tight">

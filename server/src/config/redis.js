@@ -11,7 +11,9 @@ const redis = createClient({
     socket: {
         host: env.REDIS_URL,
         port: env.REDIS_PORT,
-    }
+        reconnectStrategy: (retries) => Math.min(retries * 100, 5000),
+    },
+    pingInterval: 60_000,   // send PING every 60s to prevent idle-timeout disconnects
 });
 
 redis.on("connect", () => logger.info("Redis (node-redis) connected"));
@@ -27,6 +29,7 @@ export const bullConnection = new Redis({
   username: env.REDIS_USERNAME,
   password: env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
+  keepAlive: 60_000,       // TCP keepalive every 60s
 });
 
 bullConnection.on("connect", () =>

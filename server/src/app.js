@@ -49,9 +49,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-import { apilimiter, authLimiter } from "./middleware/rateLimiter.middleware.js";
+import csrfProtection from "./middleware/csrf.middleware.js";
+app.use(csrfProtection);
+
+import { apilimiter } from "./middleware/rateLimiter.middleware.js";
 app.use("/api",apilimiter);
-app.use("/api/auth",authLimiter);
 
 app.use("/health", (req, res) => {
     res.status(200).json({
@@ -80,7 +82,11 @@ app.use("/api/personas",PersonaRoutes);
 import BatchRoutes from "./routes/batch.routes.js";
 app.use("/api/batch",BatchRoutes);
 
+<<<<<<< HEAD
 import ReplyRoutes from "./routes/reply.routes.js";
+=======
+ import ReplyRoutes from "./routes/reply.routes.js";
+>>>>>>> 39d2e71ec2858adad274a493b3d4635e4c1ee28a
 app.use("/api/replies", ReplyRoutes);
 
 app.use((req, res, next) => {

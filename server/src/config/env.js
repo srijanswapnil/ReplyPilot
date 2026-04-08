@@ -12,7 +12,8 @@ const envSchema=z.object({
     GOOGLE_CLIENT_SECRET:z.string().min(1,'GOOGLE_CLIENT_SECRET is required'),
     GOOGLE_REDIRECT_URI:z.string().min(1,'GOOGLE_REDIRECT_URI is required'),
 
-    SESSION_SECRET:z.string().min(1,'SESSION_SECRET is required'),
+    SESSION_SECRET:z.string().min(32,'SESSION_SECRET must be at least 32 characters'),
+    TOKEN_ENCRYPTION_KEY:z.string().min(32,'TOKEN_ENCRYPTION_KEY must be at least 32 characters'),
 
     CORS_WHITELIST: z
     .string()

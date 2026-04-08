@@ -1,9 +1,7 @@
-import { google } from "googleapis";
-import redis,{keys} from "../config/redis.js";
-import User from "../models/User.models.js";
-import { env } from "../config/env.js";
+import { getValidYoutubeToken } from "../utils/youtubeToken.helper.js";
 import logger from "../utils/logger.js";
 
+<<<<<<< HEAD
 //"Memory Board" 
 const ongoingRefreshPromises = new Map(); 
 
@@ -82,3 +80,37 @@ export default async function(req,res,next){
         });
     }
 }
+=======
+/**
+ * Attaches a valid YouTube OAuth access token to req.ytToken for the authenticated user.
+ */
+const youtubeTokenMiddleware = async (req, res, next) => {
+  try {
+    const userId = req.user?._id?.toString();
+
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    req.ytToken = await getValidYoutubeToken(userId);
+    next();
+  } catch (error) {
+    logger.error("youtubeToken middleware error:", error);
+
+    if (error.reAuthNeeded) {
+      return res.status(401).json({
+        error: error.message,
+        reAuthUrl: "/api/auth/google",
+      });
+    }
+
+    return res.status(401).json({
+      error:
+        "Failed to validate Youtube token - Please re-authenticate",
+      reAuthUrl: "/api/auth/google",
+    });
+  }
+};
+
+export default youtubeTokenMiddleware;
+>>>>>>> 39d2e71ec2858adad274a493b3d4635e4c1ee28a

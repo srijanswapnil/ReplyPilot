@@ -37,7 +37,7 @@ const ReplySchema=new mongoose.Schema(
         },
         status:{
             type:String,
-            enum:['pending_review','approved','rejected','published','failed'],
+            enum:['pending_review','approved','rejected','publishing','published','failed'],
             default:'pending_review',
         },
         publishedAt:{type:Date},

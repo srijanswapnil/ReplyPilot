@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import Comment from "../models/Comment.models.js";
-
-const VALID_INTENTS = ['question', 'praise', 'criticism', 'spam', 'neutral', 'pending'];
-const VALID_SORT    = ['publishedAt', 'likeCount'];
-
-=======
 import { env } from "../config/env.js";
 import Comment from "../models/Comment.models.js";
 import axios from "axios";
@@ -13,7 +6,6 @@ import axios from "axios";
 const VALID_INTENTS = ['question', 'praise', 'criticism', 'spam', 'neutral', 'pending'];
 const VALID_SORT    = ['publishedAt', 'likeCount'];
 
->>>>>>> 39d2e71ec2858adad274a493b3d4635e4c1ee28a
 export const classifyComment = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -24,11 +16,7 @@ export const classifyComment = async (req, res, next) => {
 
     // 2. Call your FastAPI AI Service
     // Ensure your FastAPI is running on port 8000
-<<<<<<< HEAD
-    const aiResponse = await axios.post('http://localhost:8000/classify', {
-=======
     const aiResponse = await axios.post(`${env.AI_SERVICE_URL}/classify`, {
->>>>>>> 39d2e71ec2858adad274a493b3d4635e4c1ee28a
       comment_id: id,
       text: comment.textDisplay || comment.content // Match your Schema field name
     });
@@ -139,7 +127,3 @@ export const updateCommentIntent = async (req,res,next)=>{
     next(err);
   }
 }
-
-
-
-

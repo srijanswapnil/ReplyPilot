@@ -6,6 +6,8 @@ from app.schemas.reply import ReplyRequest, ReplyResponse
 from dotenv import load_dotenv
 load_dotenv()
 
+from dotenv import load_dotenv
+load_dotenv()
 # Initialize the Async client
 # Ensure HF_API_KEY is in your root .env file
 client = AsyncOpenAI(

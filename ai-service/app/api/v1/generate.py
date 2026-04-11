@@ -2,9 +2,10 @@
 from fastapi import APIRouter, HTTPException, status
 from app.schemas.reply import ReplyRequest, ReplyResponse
 from app.services.generate import generate_reply_service
-from app.core.logging          import get_logger
+from app.core.logging import get_logger
 
-
+from dotenv import load_dotenv
+load_dotenv()
 
 logger = get_logger(__name__)
 router = APIRouter()

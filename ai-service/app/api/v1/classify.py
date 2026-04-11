@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, status
 from app.schemas.comment import CommentIn, CommentOut, BatchCommentIn, BatchCommentOut
 from app.services.classify_service import classify_comment
-from app.core.logging          import get_logger
+from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()

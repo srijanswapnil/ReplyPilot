@@ -42,6 +42,7 @@ export const keys = {
   ytTokenExpiry: (userId) => `yt:token_expiry:${userId}`,
   channelCache: (channelId) => `cache:channel:${channelId}`,
   videoCache: (videoId) => `cache:video:${videoId}`,
+  ytTranscript: (videoId) => `cache:transcript:${videoId}`,
   session: (sessionId) => `session:${sessionId}`,
 };
 

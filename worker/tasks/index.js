@@ -2,8 +2,9 @@ import logger from '../utils/logger.js';
 import { classifyWorker } from './classify.worker.js';
 import { generateWorker } from './generate.worker.js';
 import { postReplyWorker } from './postReply.worker.js';
+import youtubeSyncWorker from './youtubeSync.worker.js';
 
-const workers = [classifyWorker, generateWorker, postReplyWorker];
+const workers = [classifyWorker, generateWorker, postReplyWorker, youtubeSyncWorker];
 
 workers.forEach((worker) => {
     worker.on('completed', (job) => {
@@ -19,6 +20,6 @@ workers.forEach((worker) => {
     });
 });
 
-logger.info('BullMQ workers initialized: classify | generate | post-reply');
+logger.info('BullMQ workers initialized: classify | generate | post-reply | youtube-sync');
 
 export default workers;

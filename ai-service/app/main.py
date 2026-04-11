@@ -6,12 +6,9 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import time
 
+from app.core.logging        import setup_logging, get_logger
 from dotenv import load_dotenv
 load_dotenv()
-
-from app.core.logging import setup_logging, get_logger
-
-
 from app.api.v1.classify import router as classify_router
 from app.api.v1.generate import router as generate_router
 

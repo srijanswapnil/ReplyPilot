@@ -1,11 +1,16 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Resolve .env relative to this file (app/core/config.py → project root)
+# This works regardless of which directory uvicorn / the worker is launched from.
+_ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(_ENV_FILE),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -60,9 +65,8 @@ class Settings(BaseSettings):
     BGE_MAX_SEQUENCE_LENGTH: int = 512     # tokens — hard limit for all BGE models
     BGE_NORMALIZE_EMBEDDINGS: bool = True  # required for cosine similarity
 
-    # ── Chunking ──────────────────────────────────────────────────────────────
-    CHUNK_SIZE_TOKENS: int = 350           # target tokens per chunk
-    CHUNK_OVERLAP_TOKENS: int = 80         # sliding window overlap
+    # ── Chunking (time-based) ─────────────────────────────────────────────────
+    CHUNK_WINDOW_SECONDS: int = 60         # each chunk covers N seconds of the video
     CONTEXT_PREFIX_SENTENCES: int = 2      # sentences from prev chunk used as context header
 
     # ── Retrieval ─────────────────────────────────────────────────────────────

@@ -84,21 +84,24 @@ async def _check_redis() -> DependencyStatus:
 
 async def _check_pinecone() -> DependencyStatus:
     """
-    Calls describe_index on the configured Pinecone index.
-    Confirms both connectivity and that the index actually exists.
+    Verifies Pinecone API key is valid by listing indexes.
+    Does NOT check for a specific index — the yt-rag index is created
+    automatically on first ingest and will not exist before that.
     """
     t0 = time.monotonic()
     try:
         from pinecone import Pinecone
 
         pc = Pinecone(api_key=settings.PINECONE_API_KEY)
-        # Run in thread — Pinecone SDK is synchronous
-        await asyncio.get_event_loop().run_in_executor(
-            None, lambda: pc.describe_index(settings.PINECONE_INDEX_NAME)
+        # list_indexes() just needs a valid API key — works even with zero indexes
+        indexes = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: [i.name for i in pc.list_indexes()]
         )
+        index_exists = settings.PINECONE_INDEX_NAME in indexes
         return DependencyStatus(
             status="ok",
             latency_ms=round((time.monotonic() - t0) * 1000, 2),
+            error=None if index_exists else f"Index '{settings.PINECONE_INDEX_NAME}' not created yet — will be auto-created on first ingest.",
         )
     except Exception as exc:
         logger.warning("Pinecone health check failed", error=str(exc))

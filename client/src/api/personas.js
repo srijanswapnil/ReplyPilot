@@ -11,5 +11,9 @@ export const createPersona = (data) =>
 
 export const updatePersona = (id, data) =>
   api.put(`/api/personas/${id}`, data).then(r => r.data)
+
 export const deletePersona = (id) =>
   api.delete(`/api/personas/${id}`).then(r => r.data)
+
+export const analyzePersona = (bio) =>
+  api.post('/api/personas/analyze', { bio }).then(r => r.data.data)

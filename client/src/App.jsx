@@ -6,6 +6,7 @@ import DashboardPage   from './pages/DashboardPage'
 import VideosPage      from './pages/VideosPage'
 import VideoDetailPage from './pages/VideoDetailPage'
 import RepliesPage     from './pages/RepliesPage'
+import PersonasPage    from './pages/PersonasPage'
 import AppLayout       from './layouts/AppLayout'
 import ProtectedRoute  from './components/ProtectedRoute'
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="/videos"          element={<VideosPage />} />
           <Route path="/videos/:videoId" element={<VideoDetailPage />} />
           <Route path="/replies"         element={<RepliesPage />} />
+          <Route path="/personas"        element={<PersonasPage />} />
         </Route>
 
         {/* Catch-all */}

@@ -4,6 +4,7 @@ const nav = [
   { to: '/dashboard', icon: '📊', label: 'Dashboard' },
   { to: '/videos',    icon: '📹', label: 'Videos'    },
   { to: '/replies',   icon: '✨', label: 'Replies'   },
+  { to: '/personas',  icon: '🎭', label: 'Personas'  },
 ]
 
 

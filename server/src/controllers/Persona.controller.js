@@ -1,4 +1,5 @@
 import Persona from "../models/Persona.models.js";
+// import { analyzePersonaBio } from "../services/aiService.js";
 
 export async function createPersona(req, res, next) {
   try {
@@ -63,6 +64,20 @@ export async function deletePersona(req, res, next) {
     const persona = await Persona.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!persona) return res.status(404).json({ error: 'Persona not found' });
     return res.json({ message: 'Persona deleted' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function analyzePersona(req, res, next) {
+  try {
+    const { bio } = req.body;
+    if (!bio || bio.trim().length < 10) {
+      return res.status(400).json({ error: 'Please provide a bio of at least 10 characters' });
+    }
+    //ai-service function should be written here
+    return res.json({ data: result });
   } catch (err) {
     next(err);
   }

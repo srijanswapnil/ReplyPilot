@@ -88,6 +88,7 @@ function CommentCard({ comment, onClassify, onGenerate }) {
   const [localIntent, setLocalIntent] = useState(comment.intent)
   const [replyText,   setReplyText]   = useState(null)
   const [actionError, setActionError] = useState(null)
+  const [avatarError, setAvatarError] = useState(false)
 
   async function handleClassify() {
     setClassifying(true)
@@ -124,10 +125,11 @@ function CommentCard({ comment, onClassify, onGenerate }) {
     <div className="bg-[#161b22] border border-[#30363d] hover:border-[#3d4450] rounded-xl p-4 transition-colors">
       <div className="flex gap-3">
 
-        {comment.authorAvatar ? (
+        {comment.authorAvatar && !avatarError ? (
           <img
             src={comment.authorAvatar}
             alt={comment.authorName}
+            onError={() => setAvatarError(true)}
             className="w-9 h-9 rounded-full object-cover shrink-0 border border-[#30363d]"
           />
         ) : (

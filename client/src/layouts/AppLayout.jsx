@@ -1,15 +1,17 @@
 import { Outlet, NavLink } from 'react-router-dom'
 
 const nav = [
-  { to: '/dashboard', icon: '📊', label: 'Dashboard'  },
-
+  { to: '/dashboard', icon: '📊', label: 'Dashboard' },
+  { to: '/videos',    icon: '📹', label: 'Videos'    },
+  { to: '/replies',   icon: '✨', label: 'Replies'   },
 ]
+
 
 export default function AppLayout() {
   return (
     <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden">
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar ── */} 
       <aside className="w-16 lg:w-56 flex flex-col bg-[#161b22] border-r border-[#30363d] shrink-0">
 
         {/* Logo */}

@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './index.css'
 
-import LandingPage   from './pages/LandingPage'
-import DashboardPage from './pages/DashboardPage'
-import AppLayout     from './layouts/AppLayout'
-
+import LandingPage     from './pages/LandingPage'
+import DashboardPage   from './pages/DashboardPage'
+import VideosPage      from './pages/VideosPage'
+import VideoDetailPage from './pages/VideoDetailPage'
+import RepliesPage     from './pages/RepliesPage'
+import AppLayout       from './layouts/AppLayout'
+import ProtectedRoute  from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -13,10 +16,18 @@ function App() {
         {/* Public */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Authenticated — shared layout */}
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard"  element={<DashboardPage />} />
-
+        {/* Authenticated — guarded by ProtectedRoute, shared layout */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/dashboard"       element={<DashboardPage />} />
+          <Route path="/videos"          element={<VideosPage />} />
+          <Route path="/videos/:videoId" element={<VideoDetailPage />} />
+          <Route path="/replies"         element={<RepliesPage />} />
         </Route>
 
         {/* Catch-all */}

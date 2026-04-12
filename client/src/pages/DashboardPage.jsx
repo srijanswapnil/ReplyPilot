@@ -40,22 +40,25 @@ function Skeleton() {
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [channel, setChannel]               = useState(null)
   const [channelLoading, setChannelLoading] = useState(false)
   const [channelError, setChannelError]     = useState(null)
   const [syncing, setSyncing]               = useState(false)
+  const [linking, setLinking]               = useState(false)
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/', { replace: true })
-  }, [user, authLoading, navigate])
 
-  // Fetch channel only if user has one linked
+  // Fetch channel — also auto-links on first login if channelId missing
   useEffect(() => {
-    if (user?.channelId) loadChannel(false)
+    if (user) {
+      if (user.channelId) {
+        loadChannel(false)         // already linked — normal load
+      } else {
+        linkChannel()              // first time — auto-fetch from YouTube
+      }
+    }
   }, [user])
 
   async function loadChannel(force) {
@@ -74,12 +77,30 @@ export default function DashboardPage() {
     }
   }
 
+  // Auto-links channel on first login (when user.channelId is null)
+  async function linkChannel() {
+    try {
+      setLinking(true)
+      setChannelError(null)
+      const res = await api.get('/api/channel')   // server fetches from YouTube + saves channelId
+      setChannel(res.data.data)
+    } catch (err) {
+      setChannelError(
+        err.response?.status === 404
+          ? 'No YouTube channel found for your Google account.'
+          : 'Failed to link channel. Please try again.'
+      )
+    } finally {
+      setLinking(false)
+    }
+  }
+
   async function handleLogout() {
     await api.post('/api/auth/logout')
     navigate('/', { replace: true })
   }
 
-  if (authLoading) return <Skeleton />
+  if (!user) return null
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-6">
@@ -122,14 +143,29 @@ export default function DashboardPage() {
           <p className="text-[#8b949e] text-sm mt-0.5">{user?.email || '—'}</p>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             {/* Channel link status */}
-            {user?.channelId ? (
+            {channel || linking ? (
+              linking ? (
+                <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="w-3 h-3 border border-blue-400 border-t-transparent rounded-full animate-spin inline-block" />
+                  Linking channel…
+                </span>
+              ) : (
+                <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">
+                  ✓ YouTube channel linked
+                </span>
+              )
+            ) : user?.channelId ? (
               <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">
                 ✓ YouTube channel linked
               </span>
             ) : (
-              <span className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded-full">
-                ⚠ No YouTube channel linked
-              </span>
+              <button
+                onClick={linkChannel}
+                disabled={linking}
+                className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded-full hover:bg-yellow-500/20 transition-colors disabled:opacity-50"
+              >
+                ⚠ No channel linked — click to retry
+              </button>
             )}
             {/* Member since */}
             {user?.createdAt && (

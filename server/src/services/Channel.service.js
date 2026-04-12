@@ -122,7 +122,7 @@ export const getChannelVideosInfo = async (accessToken,userId,options={}) => {
   return paginateYT(rawResponse, allVideos);
 };
 
-export const getVideoInfo = async (videoId) => {
+export const getVideoInfo = async (accessToken, videoId, userId) => {
   const yt = buildYoutubeClient(accessToken);
 
   const response = await yt.videos.list({

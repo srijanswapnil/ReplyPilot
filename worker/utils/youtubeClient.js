@@ -45,16 +45,27 @@ export async function fetchLatestVideos(youtubeClient, channelId, publishedAfter
 
 /**
  * Fetches the transcript for a given video ID and returns it as a continuous string.
+ * Prioritizes English ('en') if available.
  */
 export async function fetchTranscript(videoId) {
     logger.debug(`Fetching transcript for video ${videoId}`);
     try {
-        const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
+        // Try fetching English transcript first
+        let transcriptItems;
+        try {
+            logger.debug(`Attempting to fetch English transcript for ${videoId}`);
+            transcriptItems = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
+        } catch (enError) {
+            logger.warn(`English transcript not available for ${videoId}: ${enError.message}. Falling back to default.`);
+            // Fallback to default (original video language)
+            transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
+        }
+
         const transcriptText = transcriptItems.map(item => item.text).join(' ');
         logger.debug(`Successfully fetched transcript for video ${videoId} (length: ${transcriptText.length})`);
         return transcriptText;
     } catch (error) {
-        logger.warn(`Could not fetch transcript for video ${videoId}: ${error.message}`);
+        logger.warn(`Could not fetch any transcript for video ${videoId}: ${error.message}`);
         // Not throwing error because some videos legitimately don't have transcripts, just return null
         return null;
     }

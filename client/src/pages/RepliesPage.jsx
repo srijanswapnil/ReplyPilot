@@ -5,12 +5,12 @@ import { listReplies, approveReply, rejectReply, editReply, regenerateReply } fr
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_STYLES = {
-  pending_review: { label: 'Pending Review', bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20' },
-  approved:       { label: 'Approved',        bg: 'bg-green-500/10',  text: 'text-green-400',  border: 'border-green-500/20'  },
-  rejected:       { label: 'Rejected',        bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/20'    },
-  publishing:     { label: 'Publishing…',     bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/20'   },
-  published:      { label: 'Published',       bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20' },
-  failed:         { label: 'Failed',          bg: 'bg-red-500/10',    text: 'text-red-500',    border: 'border-red-500/20'    },
+  pending_review: { label: 'Pending', bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/20', dot: 'bg-amber-500' },
+  approved:       { label: 'Approved',   bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', dot: 'bg-emerald-500' },
+  rejected:       { label: 'Rejected',   bg: 'bg-rose-500/10',    text: 'text-rose-400',    border: 'border-rose-500/20', dot: 'bg-rose-500' },
+  publishing:     { label: 'Publishing', bg: 'bg-sky-500/10',   text: 'text-sky-400',   border: 'border-sky-500/20', dot: 'bg-sky-500' },
+  published:      { label: 'Published',  bg: 'bg-indigo-500/10', text: 'text-indigo-400', border: 'border-indigo-500/20', dot: 'bg-indigo-500' },
+  failed:         { label: 'Failed',     bg: 'bg-rose-500/10',   text: 'text-rose-600',   border: 'border-rose-500/20', dot: 'bg-rose-600' },
 }
 
 const TONE_EMOJI = {
@@ -29,24 +29,21 @@ const STATUS_FILTERS = [
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function ReplySkeleton() {
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5 animate-pulse">
-      <div className="flex gap-3 mb-4">
-        <div className="h-3 bg-[#1c2128] rounded w-1/4" />
-        <div className="h-3 bg-[#1c2128] rounded w-16" />
+    <div className="bg-[#0d1117] border border-[#30363d] rounded-2xl p-6 animate-pulse">
+      <div className="flex justify-between mb-6">
+        <div className="flex gap-3">
+          <div className="h-5 bg-[#1c2128] rounded-md w-32" />
+          <div className="h-5 bg-[#1c2128] rounded-full w-20" />
+        </div>
+        <div className="h-4 bg-[#1c2128] rounded w-24" />
       </div>
-      <div className="space-y-2 mb-4">
-        <div className="h-3 bg-[#1c2128] rounded w-full" />
-        <div className="h-3 bg-[#1c2128] rounded w-3/4" />
+      <div className="space-y-3 mb-6">
+        <div className="h-4 bg-[#1c2128] rounded w-full" />
+        <div className="h-4 bg-[#1c2128] rounded w-5/6" />
       </div>
-      <div className="h-px bg-[#30363d] my-4" />
-      <div className="space-y-2 mb-4">
-        <div className="h-3 bg-[#1c2128] rounded w-full" />
-        <div className="h-3 bg-[#1c2128] rounded w-2/3" />
-      </div>
-      <div className="flex gap-2">
-        <div className="h-8 bg-[#1c2128] rounded w-20" />
-        <div className="h-8 bg-[#1c2128] rounded w-20" />
-        <div className="h-8 bg-[#1c2128] rounded w-24" />
+      <div className="flex gap-3">
+        <div className="h-9 bg-[#1c2128] rounded-lg w-24" />
+        <div className="h-9 bg-[#1c2128] rounded-lg w-24" />
       </div>
     </div>
   )
@@ -56,7 +53,8 @@ function ReplySkeleton() {
 function StatusBadge({ status }) {
   const s = STATUS_STYLES[status] ?? STATUS_STYLES.pending_review
   return (
-    <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${s.bg} ${s.text} ${s.border}`}>
+    <span className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-0.5 rounded-full border font-semibold tracking-wide uppercase ${s.bg} ${s.text} ${s.border}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
       {s.label}
     </span>
   )
@@ -67,11 +65,11 @@ function ReplyCard({ reply, onUpdate }) {
   const [status,    setStatus]    = useState(reply.status)
   const [editing,   setEditing]   = useState(false)
   const [editText,  setEditText]  = useState(reply.finalText || reply.generatedText || '')
-  const [loading,   setLoading]   = useState(null) // 'approve'|'reject'|'edit'|'regen'
+  const [loading,   setLoading]   = useState(null)
   const [error,     setError]     = useState(null)
   const [showFull,  setShowFull]  = useState(false)
 
-  const comment     = reply.commentId   // populated object
+  const comment     = reply.commentId
   const displayText = reply.finalText || reply.editedText || reply.generatedText || ''
   const commentText = comment?.textDisplay || comment?.text || ''
 
@@ -125,148 +123,153 @@ function ReplyCard({ reply, onUpdate }) {
   const isLocked = ['published', 'publishing'].includes(status)
 
   return (
-    <div className={`bg-[#161b22] border rounded-xl p-5 transition-all ${
-      status === 'approved'  ? 'border-green-500/30'  :
-      status === 'rejected'  ? 'border-red-500/20'   :
-      status === 'published' ? 'border-purple-500/30' :
-      'border-[#30363d]'
+    <div className={`group bg-[#0d1117] border rounded-2xl p-6 transition-all duration-300 shadow-sm hover:shadow-md ${
+      status === 'approved'  ? 'border-emerald-500/30'  :
+      status === 'rejected'  ? 'border-rose-500/20'    :
+      status === 'published' ? 'border-indigo-500/30' :
+      'border-[#30363d] hover:border-[#444c56]'
     }`}>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-white text-sm font-semibold">
-            {comment?.authorName || 'Unknown'}
-          </span>
-          <StatusBadge status={status} />
-          {reply.tone && (
-            <span className="text-xs text-[#484f58]">
-              {TONE_EMOJI[reply.tone] || ''} {reply.tone}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-xs font-bold text-white uppercase">
+            {comment?.authorName?.charAt(0) || '?'}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-gray-100 text-sm font-bold leading-tight">
+              {comment?.authorName || 'Unknown'}
             </span>
-          )}
-        </div>
-        <span className="text-xs text-[#484f58]">
-          {new Date(reply.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
-
-      {/* Original comment */}
-      <div className="bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3 mb-4">
-        <p className="text-xs text-[#484f58] font-medium uppercase tracking-wide mb-1.5">Original Comment</p>
-        <p className={`text-[#8b949e] text-sm leading-relaxed ${!showFull && 'line-clamp-2'}`}>
-          {commentText || '—'}
-        </p>
-        {commentText.length > 120 && (
-          <button
-            onClick={() => setShowFull(p => !p)}
-            className="text-xs text-[#484f58] hover:text-[#8b949e] mt-1 transition-colors"
-          >
-            {showFull ? 'Show less' : 'Show more'}
-          </button>
-        )}
-      </div>
-
-      {/* Generated reply */}
-      <div className="mb-4">
-        <p className="text-xs text-[#484f58] font-medium uppercase tracking-wide mb-1.5">
-          ✨ AI Reply {reply.editedText ? <span className="text-[#ff4444] normal-case">(edited)</span> : ''}
-        </p>
-
-        {editing ? (
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={editText}
-              onChange={e => setEditText(e.target.value)}
-              rows={4}
-              className="w-full bg-[#0d1117] border border-[#ff4444]/40 focus:border-[#ff4444] focus:outline-none rounded-lg px-3 py-2.5 text-sm text-white resize-none transition-colors"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleEdit}
-                disabled={loading === 'edit'}
-                className="flex items-center gap-1.5 text-xs bg-[#ff4444] hover:bg-[#ff2222] text-white px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
-              >
-                {loading === 'edit'
-                  ? <><span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> Saving…</>
-                  : '💾 Save'
-                }
-              </button>
-              <button
-                onClick={() => { setEditing(false); setEditText(displayText) }}
-                className="text-xs text-[#8b949e] hover:text-white px-3 py-1.5 rounded-lg border border-[#30363d] hover:border-[#555] transition-colors"
-              >
-                Cancel
-              </button>
+            <div className="flex items-center gap-2 mt-1">
+              <StatusBadge status={status} />
+              {reply.tone && (
+                <span className="text-[11px] text-[#8b949e] flex items-center gap-1 bg-[#161b22] px-2 py-0.5 rounded-md border border-[#30363d]">
+                  {TONE_EMOJI[reply.tone]} {reply.tone}
+                </span>
+              )}
             </div>
           </div>
-        ) : (
-          <p className="text-white text-sm leading-relaxed bg-[#0d1117] border border-[#30363d] rounded-lg px-4 py-3">
-            {displayText || <span className="text-[#484f58] italic">No reply text</span>}
-          </p>
-        )}
+        </div>
+        <time className="text-[11px] text-[#484f58] font-medium">
+          {new Date(reply.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+        </time>
       </div>
 
-      {/* Error */}
-      {error && <p className="text-xs text-red-400 mb-3">{error}</p>}
+      {/* Content Stack */}
+      <div className="space-y-4">
+        {/* Original comment */}
+        <div className="relative pl-4 border-l-2 border-[#30363d]">
+          <p className="text-[10px] text-[#484f58] font-bold uppercase tracking-widest mb-1">Incoming</p>
+          <p className={`text-[#8b949e] text-[13px] leading-relaxed ${!showFull && 'line-clamp-2'}`}>
+            {commentText || '—'}
+          </p>
+          {commentText.length > 120 && (
+            <button
+              onClick={() => setShowFull(p => !p)}
+              className="text-[11px] text-blue-400 hover:text-blue-300 mt-1 font-medium transition-colors"
+            >
+              {showFull ? 'Show less' : 'Show more'}
+            </button>
+          )}
+        </div>
+
+        {/* Generated reply */}
+        <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 transition-colors group-hover:bg-[#1c2128]">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] text-amber-500/80 font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-xs">✨</span> AI Response {reply.editedText && <span className="text-[#ff4444] lowercase font-normal">(edited)</span>}
+            </p>
+          </div>
+
+          {editing ? (
+            <div className="space-y-3">
+              <textarea
+                value={editText}
+                onChange={e => setEditText(e.target.value)}
+                rows={4}
+                className="w-full bg-[#0d1117] border border-[#ff4444]/40 focus:border-[#ff4444] focus:ring-1 focus:ring-[#ff4444] focus:outline-none rounded-lg px-3 py-2.5 text-sm text-white resize-none transition-all"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleEdit}
+                  disabled={loading === 'edit'}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 text-xs bg-[#ff4444] hover:bg-[#ee3333] text-white px-4 py-2 rounded-lg font-bold transition-all disabled:opacity-50"
+                >
+                  {loading === 'edit' ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => { setEditing(false); setEditText(displayText) }}
+                  className="flex-1 sm:flex-none text-xs text-[#8b949e] hover:text-white px-4 py-2 rounded-lg border border-[#30363d] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+              {displayText || <span className="text-[#484f58] italic">No reply text</span>}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 p-2 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+           <p className="text-xs text-rose-400 text-center font-medium">{error}</p>
+        </div>
+      )}
 
       {/* Actions */}
       {!isLocked && !editing && (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap mt-6 pt-5 border-t border-[#30363d]">
           {status !== 'approved' && (
             <button
-              id={`approve-${reply._id}`}
               onClick={handleApprove}
               disabled={!!loading}
-              className="flex items-center gap-1.5 text-xs text-green-400 hover:text-white bg-green-500/10 hover:bg-green-500 border border-green-500/30 hover:border-green-500 px-3 py-1.5 rounded-lg transition-all font-medium disabled:opacity-40"
+              className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-white bg-emerald-500/10 hover:bg-emerald-500 px-4 py-2 rounded-lg transition-all font-bold border border-emerald-500/20 disabled:opacity-40"
             >
-              {loading === 'approve'
-                ? <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Approving…</>
-                : '✅ Approve'
-              }
+              {loading === 'approve' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Approve'}
             </button>
           )}
 
           {status !== 'rejected' && (
             <button
-              id={`reject-${reply._id}`}
               onClick={handleReject}
               disabled={!!loading}
-              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 px-3 py-1.5 rounded-lg transition-all font-medium disabled:opacity-40"
+              className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-500 px-4 py-2 rounded-lg transition-all font-bold border border-rose-500/20 disabled:opacity-40"
             >
-              {loading === 'reject'
-                ? <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Rejecting…</>
-                : '❌ Reject'
-              }
+              {loading === 'reject' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Reject'}
             </button>
           )}
 
+          <div className="flex-1 h-px" /> {/* Spacer */}
+
           <button
-            id={`edit-${reply._id}`}
             onClick={() => setEditing(true)}
             disabled={!!loading}
-            className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-white bg-[#1c2128] hover:bg-[#252b34] border border-[#30363d] hover:border-[#555] px-3 py-1.5 rounded-lg transition-colors font-medium disabled:opacity-40"
+            className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-white bg-[#1c2128] border border-[#30363d] px-4 py-2 rounded-lg transition-all font-bold disabled:opacity-40"
           >
-            ✏️ Edit
+            Edit
           </button>
 
           <button
-            id={`regen-${reply._id}`}
             onClick={handleRegenerate}
             disabled={!!loading}
-            className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-white bg-[#1c2128] hover:bg-[#252b34] border border-[#30363d] hover:border-[#555] px-3 py-1.5 rounded-lg transition-colors font-medium disabled:opacity-40"
+            className="flex items-center gap-1.5 text-xs text-[#8b949e] hover:text-white bg-[#1c2128] border border-[#30363d] px-4 py-2 rounded-lg transition-all font-bold disabled:opacity-40"
           >
-            {loading === 'regen'
-              ? <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Generating…</>
-              : '🔄 Regenerate'
-            }
+            {loading === 'regen' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Regenerate'}
           </button>
         </div>
       )}
 
       {isLocked && (
-        <p className="text-xs text-[#484f58]">
-          {status === 'published' ? '✅ Posted to YouTube' : '⏳ Publishing to YouTube…'}
-        </p>
+        <div className="mt-6 pt-4 border-t border-[#30363d] flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full animate-pulse ${status === 'published' ? 'bg-indigo-500' : 'bg-sky-500'}`} />
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#484f58]">
+            {status === 'published' ? 'Synced with YouTube' : 'Syncing to YouTube…'}
+          </p>
+        </div>
       )}
     </div>
   )
@@ -276,23 +279,20 @@ function ReplyCard({ reply, onUpdate }) {
 export default function RepliesPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-
   const selectedVideoId = searchParams.get('videoId') || ''
 
-  const [videos,       setVideos]       = useState([])
-  const [videosLoading,setVideosLoading]= useState(true)
-  const [replies,      setReplies]      = useState([])
-  const [loading,      setLoading]      = useState(false)
-  const [error,        setError]        = useState(null)
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [videos,        setVideos]        = useState([])
+  const [videosLoading, setVideosLoading] = useState(true)
+  const [replies,       setReplies]       = useState([])
+  const [loading,       setLoading]       = useState(false)
+  const [error,         setError]         = useState(null)
+  const [statusFilter,  setStatusFilter]  = useState('all')
 
-  // Load video list for the dropdown
   useEffect(() => {
     getVideos()
       .then(data => {
         const list = Array.isArray(data) ? data : (data.items ?? data.data ?? [])
         setVideos(list)
-        // Auto-select first video if none selected
         if (!selectedVideoId && list.length > 0) {
           const firstId = list[0].videoId ?? list[0].id
           setSearchParams({ videoId: firstId }, { replace: true })
@@ -302,7 +302,6 @@ export default function RepliesPage() {
       .finally(() => setVideosLoading(false))
   }, [])
 
-  // Load replies when video changes
   const fetchReplies = useCallback(() => {
     if (!selectedVideoId) return
     setLoading(true)
@@ -339,151 +338,146 @@ export default function RepliesPage() {
   , [replies])
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Replies</h1>
-          <p className="text-[#8b949e] text-sm mt-0.5">
-            Review, edit and approve AI-generated replies
-          </p>
-        </div>
-        <button
-          onClick={fetchReplies}
-          disabled={loading || !selectedVideoId}
-          className="flex items-center gap-2 text-sm text-[#8b949e] hover:text-white border border-[#30363d] hover:border-[#555] px-4 py-2 rounded-lg transition-colors disabled:opacity-40 shrink-0"
-        >
-          <span className={loading ? 'animate-spin inline-block' : ''}>↻</span>
-          Refresh
-        </button>
-      </div>
-
-      {/* ── Video selector ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <label className="block text-xs text-[#8b949e] font-medium mb-1.5">Select Video</label>
-          <select
-            id="video-select"
-            value={selectedVideoId}
-            onChange={e => setSearchParams({ videoId: e.target.value })}
-            disabled={videosLoading}
-            className="w-full bg-[#161b22] border border-[#30363d] focus:border-[#ff4444]/60 focus:outline-none rounded-lg px-4 py-2.5 text-sm text-white transition-colors appearance-none cursor-pointer"
-          >
-            {videosLoading ? (
-              <option>Loading videos…</option>
-            ) : videos.length === 0 ? (
-              <option value="">No videos found</option>
-            ) : (
-              videos.map(v => (
-                <option key={v.videoId ?? v.id} value={v.videoId ?? v.id}>
-                  {v.title || 'Untitled'}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-
-        {selectedVideoId && (
-          <div className="flex items-end">
-            <button
-              onClick={() => navigate(`/videos/${selectedVideoId}`)}
-              className="flex items-center gap-2 text-sm text-[#8b949e] hover:text-white border border-[#30363d] hover:border-[#555] px-4 py-2.5 rounded-lg transition-colors"
-            >
-              💬 View Comments
-            </button>
+    <div className="min-h-screen text-gray-300 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-tight">Review Center</h1>
+            <p className="text-[#8b949e] mt-2 font-medium">
+              Manage AI-generated responses for your community.
+            </p>
           </div>
-        )}
-      </div>
+          <button
+            onClick={fetchReplies}
+            disabled={loading || !selectedVideoId}
+            className="flex items-center gap-2 text-sm font-bold bg-[#1c2128] text-white border border-[#30363d] hover:bg-[#21262d] px-5 py-2.5 rounded-xl transition-all disabled:opacity-40"
+          >
+            <span className={`text-lg ${loading ? 'animate-spin' : ''}`}>↻</span>
+            Refresh Queue
+          </button>
+        </header>
 
-      {!selectedVideoId ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <span className="text-5xl mb-4">📋</span>
-          <p className="text-white font-semibold text-lg">Select a video to see its replies</p>
-          <p className="text-[#8b949e] text-sm mt-1">Choose a video from the dropdown above</p>
+        {/* Video Selection Card */}
+        <div className="bg-[#0d1117] border border-[#30363d] rounded-2xl p-1 shadow-2xl">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1">
+            <div className="relative flex-1">
+              <select
+                value={selectedVideoId}
+                onChange={e => setSearchParams({ videoId: e.target.value })}
+                disabled={videosLoading}
+                className="w-full bg-transparent border-none focus:ring-0 px-5 py-4 text-sm text-white font-semibold appearance-none cursor-pointer"
+              >
+                {videosLoading ? (
+                  <option>Loading your videos...</option>
+                ) : videos.length === 0 ? (
+                  <option value="">No videos available</option>
+                ) : (
+                  videos.map(v => (
+                    <option key={v.videoId ?? v.id} value={v.videoId ?? v.id} className="bg-[#0d1117]">
+                      {v.title || 'Untitled Video'}
+                    </option>
+                  ))
+                )}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#484f58]">
+                ▼
+              </div>
+            </div>
+            
+            <div className="hidden sm:block w-px h-8 bg-[#30363d]" />
+
+            {selectedVideoId && (
+              <button
+                onClick={() => navigate(`/videos/${selectedVideoId}`)}
+                className="px-6 py-4 text-sm font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center justify-center gap-2"
+              >
+                View Comments <span>→</span>
+              </button>
+            )}
+          </div>
         </div>
-      ) : (
-        <>
-          {/* ── Status filter tabs ── */}
-          {!loading && replies.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap">
-              {STATUS_FILTERS.map(({ key, label }) => {
-                const count = key === 'all' ? replies.length : (statusCounts[key] || 0)
-                if (key !== 'all' && count === 0) return null
-                return (
-                  <button
-                    key={key}
-                    id={`status-${key}`}
-                    onClick={() => setStatusFilter(key)}
-                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
-                      statusFilter === key
-                        ? 'bg-[#ff4444] border-[#ff4444] text-white'
-                        : 'bg-[#161b22] border-[#30363d] text-[#8b949e] hover:text-white hover:border-[#555]'
-                    }`}
-                  >
-                    {label}
-                    <span className={`text-[10px] px-1 rounded-full ${statusFilter === key ? 'bg-white/20' : 'bg-[#1c2128]'}`}>
-                      {count}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          )}
 
-          {/* ── Error ── */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl px-5 py-4 text-sm flex items-center justify-between">
-              <span>{error}</span>
-              <button onClick={fetchReplies} className="text-xs underline hover:no-underline ml-4">Retry</button>
-            </div>
-          )}
+        {!selectedVideoId ? (
+          <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-[#30363d] rounded-3xl">
+            <div className="w-16 h-16 bg-[#161b22] rounded-2xl flex items-center justify-center text-3xl mb-4 border border-[#30363d]">📹</div>
+            <h3 className="text-white font-bold text-xl">No Video Selected</h3>
+            <p className="text-[#8b949e] mt-1">Pick a video from the menu to start moderating.</p>
+          </div>
+        ) : (
+          <>
+            {/* Filter Tabs */}
+            {!loading && replies.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {STATUS_FILTERS.map(({ key, label }) => {
+                  const count = key === 'all' ? replies.length : (statusCounts[key] || 0)
+                  if (key !== 'all' && count === 0) return null
+                  const isActive = statusFilter === key
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setStatusFilter(key)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
+                        isActive 
+                        ? 'bg-[#ff4444] border-[#ff4444] text-white shadow-lg shadow-red-500/20' 
+                        : 'bg-[#0d1117] border-[#30363d] text-[#8b949e] hover:border-[#444c56]'
+                      }`}
+                    >
+                      {label}
+                      <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${isActive ? 'bg-black/20' : 'bg-[#1c2128]'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
-          {/* ── List ── */}
-          {loading ? (
-            <div className="flex flex-col gap-4">
-              {[...Array(3)].map((_, i) => <ReplySkeleton key={i} />)}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <span className="text-5xl mb-4">✨</span>
-              <p className="text-white font-semibold text-lg">
-                {statusFilter !== 'all' ? `No ${statusFilter.replace('_', ' ')} replies` : 'No replies yet'}
-              </p>
-              <p className="text-[#8b949e] text-sm mt-1">
-                {statusFilter !== 'all'
-                  ? 'Try a different filter'
-                  : 'Go to the Comments page and click "Generate Reply" on a comment'}
-              </p>
-              {statusFilter !== 'all' ? (
-                <button
-                  onClick={() => setStatusFilter('all')}
-                  className="mt-4 text-sm text-[#ff4444] hover:underline"
-                >
-                  Clear filter
-                </button>
+            {/* Error Alert */}
+            {error && (
+              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-2xl px-6 py-4 text-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">⚠️</span>
+                  <span className="font-medium">{error}</span>
+                </div>
+                <button onClick={fetchReplies} className="font-bold hover:underline">Retry</button>
+              </div>
+            )}
+
+            {/* List Section */}
+            <div className="space-y-4">
+              {loading ? (
+                [...Array(3)].map((_, i) => <ReplySkeleton key={i} />)
+              ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 bg-[#0d1117] border border-[#30363d] rounded-3xl text-center px-6">
+                  <span className="text-5xl mb-6">🏝️</span>
+                  <h3 className="text-white font-bold text-xl">
+                    {statusFilter !== 'all' ? `No ${statusFilter.replace('_', ' ')} items` : 'Queue Empty'}
+                  </h3>
+                  <p className="text-[#8b949e] mt-2 max-w-xs mx-auto">
+                    {statusFilter !== 'all' 
+                      ? "There's nothing matching this filter right now." 
+                      : "Head over to the comments page to generate some AI magic."}
+                  </p>
+                  {statusFilter === 'all' && (
+                    <button
+                      onClick={() => navigate(`/videos/${selectedVideoId}`)}
+                      className="mt-8 bg-[#ff4444] hover:bg-[#ee3333] text-white text-sm font-black px-8 py-3 rounded-xl transition-all shadow-xl shadow-red-500/20"
+                    >
+                      Go to Comments
+                    </button>
+                  )}
+                </div>
               ) : (
-                <button
-                  onClick={() => navigate(`/videos/${selectedVideoId}`)}
-                  className="mt-5 flex items-center gap-2 bg-[#ff4444] hover:bg-[#ff2222] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
-                >
-                  💬 Go to Comments
-                </button>
+                filtered.map(reply => (
+                  <ReplyCard key={reply._id} reply={reply} onUpdate={handleUpdate} />
+                ))
               )}
             </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {filtered.map(reply => (
-                <ReplyCard
-                  key={reply._id}
-                  reply={reply}
-                  onUpdate={handleUpdate}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   )
 }

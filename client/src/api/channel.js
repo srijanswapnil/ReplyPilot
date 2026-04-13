@@ -1,16 +1,44 @@
-import api from './axios'
+import api from './axios';
+const handleError = (error, source) => {
+  const message = error.response?.data?.message || error.message || "An unknown error occurred";
+  console.error(`Error in ${source}:`, message);
+  throw new Error(message); 
+};
 
+export const getChannel = async (force = false) => {
+  try {
+    const response = await api.get('/api/channel', { 
+      params: force ? { force: 'true' } : {} 
+    });
+    return response.data.data;
+  } catch (error) {
+    handleError(error, 'getChannel');
+  }
+};
 
-export const getChannel = (force = false) =>
-  api.get('/api/channel', { params: force ? { force: 'true' } : {} })
-    .then(r => r.data.data)
+export const getVideos = async (params = {}) => {
+  try {
+    const response = await api.get('/api/channel/videos', { params });
+    return response.data;
+  } catch (error) {
+    handleError(error, 'getVideos');
+  }
+};
 
+export const getVideo = async (videoId) => {
+  try {
+    const response = await api.get(`/api/channel/videos/${videoId}`);
+    return response.data.data;
+  } catch (error) {
+    handleError(error, 'getVideo');
+  }
+};
 
-export const getVideos = (params = {}) =>
-  api.get('/api/channel/videos', { params }).then(r => r.data)
-
-export const getVideo = (videoId) =>
-  api.get(`/api/channel/videos/${videoId}`).then(r => r.data.data)
-
-export const getVideoComments = (videoId, params = {}) =>
-  api.get(`/api/channel/videos/${videoId}/comments`, { params }).then(r => r.data)
+export const getVideoComments = async (videoId, params = {}) => {
+  try {
+    const response = await api.get(`/api/channel/videos/${videoId}/comments`, { params });
+    return response.data;
+  } catch (error) {
+    handleError(error, 'getVideoComments');
+  }
+};

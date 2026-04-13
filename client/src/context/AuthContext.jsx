@@ -1,38 +1,51 @@
-  import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import api from '../api/axios'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(null)
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    api.get('/api/auth/user')
-      .then(res => setUser(res.data.data))
-      .catch(err => {
-        if (err.response?.status === 401) {
-          setUser(null)   // not logged in — expected
-        } else {
-          setError(err)
-        }
-      })
-      .finally(() => setLoading(false))
+  const fetchUser = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await api.get('/api/auth/user')
+      setUser(res.data.data)
+      setError(null)
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setUser(null)
+      } else {
+        setError(err.message || 'Failed to fetch user')
+      }
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  function updateUser(updated) {
-    setUser(updated)
-  }
+  useEffect(() => {
+    fetchUser()
+  }, [fetchUser])
+
+  // Use useMemo to prevent unnecessary re-renders of all consumers
+  const value = useMemo(() => ({
+    user,
+    loading,
+    error,
+    updateUser: setUser, // simplified
+    refreshUser: fetchUser,
+    isAuthenticated: !!user
+  }), [user, loading, error, fetchUser])
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, updateUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')

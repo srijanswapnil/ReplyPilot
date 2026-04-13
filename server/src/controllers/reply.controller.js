@@ -16,7 +16,7 @@ const VALID_TONES = [
 export async function generateSingleReply(req, res, next) {
   try {
     const { id } = req.params; // comment MongoDB _id
-    const { tone = 'friendly', personaId } = req.body;
+    const { tone = 'friendly', personaId } = req.body || {};
 
     // Validate tone
     if (!VALID_TONES.includes(tone)) {

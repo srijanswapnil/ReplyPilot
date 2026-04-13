@@ -76,7 +76,13 @@ export async function analyzePersona(req, res, next) {
     if (!bio || bio.trim().length < 10) {
       return res.status(400).json({ error: 'Please provide a bio of at least 10 characters' });
     }
-    //ai-service function should be written here
+
+    // TODO: replace this stub with an AI analysis service when available
+    const result = {
+      tone: 'friendly',
+      systemPrompt: bio.trim(),
+    };
+
     return res.json({ data: result });
   } catch (err) {
     next(err);

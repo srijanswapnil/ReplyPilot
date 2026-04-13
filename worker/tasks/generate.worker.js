@@ -24,7 +24,7 @@ export const generateWorker = new Worker(
       if (personaId) {
         const persona = await Persona.findById(personaId);
         if (persona) {
-          personaDescription = persona.systemPrompt || persona.description || '';
+          personaDescription = persona.systemPrompt || persona.description || persona.bio || '';
         }
       }
 

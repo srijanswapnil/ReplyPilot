@@ -1,5 +1,6 @@
 import { Outlet, NavLink, Link } from 'react-router-dom'
 import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 
 const nav = [
   { to: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -10,6 +11,7 @@ const nav = [
 
 export default function AppLayout() {
   const [searchQuery, setSearchQuery] = useState('')
+  const { user } = useAuth()
 
   return (
     <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden font-sans selection:bg-[#ff4444]/30">
@@ -81,11 +83,15 @@ export default function AppLayout() {
             {/* User Profile Section */}
             <div className="flex items-center gap-3 pl-4 border-l border-[#30363d]">
               <div className="flex flex-col items-end hidden sm:flex">
-                <span className="text-xs font-semibold text-white">Srijan Swapnil</span>
-                <span className="text-[10px] text-green-500 font-medium">Pro Creator</span>
+                <span className="text-xs font-semibold text-white"> {user?.displayName || 'User'} </span>
+                <span className="text-[10px] text-green-500 font-medium">Creator</span>
               </div>
               <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#ff4444] to-[#ff8e8e] flex items-center justify-center text-xs font-bold border-2 border-[#30363d] cursor-pointer hover:shadow-[0_0_15px_rgba(255,68,68,0.4)] transition-all">
-                SS
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.displayName} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <span>{user?.displayName?.charAt(0) || 'U'}</span>
+                )}
               </div>
             </div>
           </div>

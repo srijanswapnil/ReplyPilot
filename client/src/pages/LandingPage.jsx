@@ -7,6 +7,8 @@ const ERROR_MESSAGES = {
   rate_limit: 'Too many sign-in attempts. Please wait a few minutes and try again.',
 }
 
+const BACKEND_AUTH_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export default function LandingPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -72,7 +74,7 @@ export default function LandingPage() {
         {/* Google sign in */}
         <a
           id="google-signin-btn"
-          href="http://localhost:5000/api/auth/google"
+          href={`${BACKEND_AUTH_URL}/api/auth/google`}
           className="flex items-center gap-3 bg-white text-gray-900 font-semibold px-6 py-3.5 rounded-xl shadow-lg hover:bg-gray-100 active:scale-95 transition-all duration-150 w-full justify-center"
         >
           {/* Google SVG */}

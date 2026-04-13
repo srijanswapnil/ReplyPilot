@@ -30,7 +30,7 @@ function StatCard({ label, value, icon, index }) {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const navigate = useNavigate()
 
   const [channel, setChannel] = useState(null)
@@ -74,8 +74,13 @@ export default function DashboardPage() {
   }
 
   async function handleLogout() {
-    await api.post('/api/auth/logout')
-    navigate('/', { replace: true })
+    try {
+      await api.post('/api/auth/logout')
+      updateUser(null)
+      navigate('/', { replace: true })
+    } catch (err) {
+      console.error('Logout failed', err)
+    }
   }
 
   if (!user) return null

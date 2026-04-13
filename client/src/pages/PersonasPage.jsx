@@ -62,11 +62,11 @@ function PersonaCard({ persona, onEdit, onDelete, onSetDefault, index }) {
         </div>
       </div>
 
-      {persona.systemPrompt && (
+      {(persona.systemPrompt || persona.description) && (
         <div className="relative mb-6">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#30363d] rounded-full group-hover:bg-[#ff4444]/50 transition-colors" />
             <p className="text-[#8b949e] text-xs leading-relaxed line-clamp-3 pl-4 italic">
-              "{persona.systemPrompt}"
+              "{persona.systemPrompt || persona.description}"
             </p>
         </div>
       )}
@@ -160,7 +160,7 @@ function BioStep({ onAnalyzed }) {
 function ConfirmStep({ analysis, editingPersona, onSave, onBack }) {
   const [name, setName] = useState(editingPersona?.name ?? '')
   const [tone, setTone] = useState(analysis.tone ?? editingPersona?.tone ?? 'neutral')
-  const [systemPrompt, setSystemPrompt] = useState(analysis.systemPrompt ?? editingPersona?.systemPrompt ?? '')
+  const [systemPrompt, setSystemPrompt] = useState(analysis.systemPrompt ?? editingPersona?.systemPrompt ?? editingPersona?.bio ?? '')
   const [isDefault, setIsDefault] = useState(editingPersona?.isDefault ?? false)
   const [saving, setSaving] = useState(false)
 
@@ -180,6 +180,11 @@ function ConfirmStep({ analysis, editingPersona, onSave, onBack }) {
           <div>
             <label className="block text-[#484f58] text-[10px] font-black uppercase tracking-widest mb-2">Display Name</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Professional Mode" className="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#ff4444] rounded-xl px-4 py-3 text-white text-sm outline-none transition-all" />
+          </div>
+
+          <div>
+            <label className="block text-[#484f58] text-[10px] font-black uppercase tracking-widest mb-2">Persona Prompt / Bio</label>
+            <textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} placeholder="Keep this prompt short and specific for the persona." rows={4} className="w-full bg-[#0d1117] border border-[#30363d] focus:border-[#ff4444] rounded-xl px-4 py-3 text-white text-sm outline-none transition-all resize-none" />
           </div>
 
           <div>
@@ -214,7 +219,7 @@ function ConfirmStep({ analysis, editingPersona, onSave, onBack }) {
 
 function PersonaModal({ editingPersona, onClose, onSaved }) {
   const [step, setStep] = useState(editingPersona ? 2 : 1)
-  const [analysis, setAnalysis] = useState(editingPersona ? { tone: editingPersona.tone, systemPrompt: editingPersona.systemPrompt, bio: '' } : null)
+  const [analysis, setAnalysis] = useState(editingPersona ? { tone: editingPersona.tone, systemPrompt: editingPersona.systemPrompt ?? editingPersona.description ?? editingPersona.bio ?? '' } : null)
 
   const handleSave = async (fields) => {
     editingPersona ? await updatePersona(editingPersona._id, fields) : await createPersona(fields)
@@ -241,7 +246,7 @@ export default function PersonasPage() {
   const [personas, setPersonas] = useState([]); const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false); const [editingPersona, setEditing] = useState(null)
 
-  const load = async () => { try { const res = await listPersonas(); setPersonas(res.data ?? []) } finally { setLoading(false) } }
+  const load = async () => { try { const res = await listPersonas(); setPersonas(res ?? []) } finally { setLoading(false) } }
   useEffect(() => { load() }, [])
 
   return (

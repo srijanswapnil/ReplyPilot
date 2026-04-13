@@ -5,5 +5,15 @@ const api = axios.create({
   withCredentials: true,
 })
 
+// Redirect to Google re-auth if YouTube token has expired
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.data?.reAuthUrl) {
+      window.location.href = 'http://localhost:5000' + err.response.data.reAuthUrl
+    }
+    return Promise.reject(err)
+  }
+)
 
 export default api

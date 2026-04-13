@@ -1,4 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, Link } from 'react-router-dom'
+import { useState } from 'react'
 
 const nav = [
   { to: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -7,37 +8,43 @@ const nav = [
   { to: '/personas',  icon: '🎭', label: 'Personas'  },
 ]
 
-
 export default function AppLayout() {
+  const [searchQuery, setSearchQuery] = useState('')
+
   return (
-    <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden">
+    <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden font-sans selection:bg-[#ff4444]/30">
 
       {/* ── Sidebar ── */} 
-      <aside className="w-16 lg:w-56 flex flex-col bg-[#161b22] border-r border-[#30363d] shrink-0">
+      <aside className="w-20 lg:w-60 flex flex-col bg-[#161b22] border-r border-[#30363d] shrink-0 transition-all duration-300 ease-in-out">
 
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 py-5 border-b border-[#30363d]">
-          <span className="text-[#ff4444] text-xl font-bold">▶</span>
-          <span className="hidden lg:block text-white font-semibold text-sm tracking-wide">
+        {/* Logo - Now a Link to Dashboard */}
+        <Link 
+          to="/dashboard" 
+          className="flex items-center gap-3 px-5 py-6 border-b border-[#30363d] group cursor-pointer hover:bg-[#1c2128] transition-all"
+        >
+          <span className="text-[#ff4444] text-2xl font-bold group-hover:rotate-[360deg] transition-transform duration-500">
+            ▶
+          </span>
+          <span className="hidden lg:block text-white font-bold text-base tracking-tight group-hover:translate-x-1 transition-transform">
             ReplyPilot
           </span>
-        </div>
+        </Link>
 
         {/* Nav links */}
-        <nav className="flex flex-col gap-1 p-2 flex-1">
+        <nav className="flex flex-col gap-2 p-3 flex-1">
           {nav.map(({ to, icon, label }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative ${
                   isActive
                     ? 'bg-[#ff4444]/10 text-[#ff4444]'
                     : 'text-[#8b949e] hover:bg-[#1c2128] hover:text-white'
                 }`
               }
             >
-              <span className="text-base shrink-0">{icon}</span>
+              <span className="text-lg shrink-0 group-hover:scale-125 transition-transform">{icon}</span>
               <span className="hidden lg:block">{label}</span>
             </NavLink>
           ))}
@@ -47,14 +54,48 @@ export default function AppLayout() {
       {/* ── Right column ── */}
       <div className="flex flex-col flex-1 overflow-hidden">
 
-        {/* TopBar */}
-        <header className="h-14 flex items-center px-6 bg-[#161b22] border-b border-[#30363d] shrink-0">
-          <span className="text-[#8b949e] text-sm font-medium">ReplyPilot</span>
+        {/* TopBar - Added Search and Notification functionality */}
+        <header className="h-16 flex items-center justify-between px-8 bg-[#161b22]/95 backdrop-blur-sm border-b border-[#30363d] shrink-0 z-10">
+          
+          {/* Functional Search Bar */}
+          <div className="relative group hidden md:block">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8b949e] group-focus-within:text-[#ff4444] transition-colors">
+              🔍
+            </span>
+            <input 
+              type="text"
+              placeholder="Search comments or videos... (Cmd + K)"
+              className="bg-[#0d1117] border border-[#30363d] rounded-full py-1.5 pl-10 pr-4 text-sm w-80 focus:outline-none focus:border-[#ff4444] focus:ring-1 focus:ring-[#ff4444]/50 transition-all placeholder:text-[#484f58]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-6">
+            {/* Notification Bell with Badge */}
+            <button className="relative p-2 text-[#8b949e] hover:text-white transition-colors">
+              🔔
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#ff4444] rounded-full border-2 border-[#161b22]" />
+            </button>
+
+            {/* User Profile Section */}
+            <div className="flex items-center gap-3 pl-4 border-l border-[#30363d]">
+              <div className="flex flex-col items-end hidden sm:flex">
+                <span className="text-xs font-semibold text-white">Srijan Swapnil</span>
+                <span className="text-[10px] text-green-500 font-medium">Pro Creator</span>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#ff4444] to-[#ff8e8e] flex items-center justify-center text-xs font-bold border-2 border-[#30363d] cursor-pointer hover:shadow-[0_0_15px_rgba(255,68,68,0.4)] transition-all">
+                SS
+              </div>
+            </div>
+          </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-8 bg-radial-gradient">
+          <div className="max-w-7xl mx-auto animate-in fade-in zoom-in-95 duration-500">
+            <Outlet />
+          </div>
         </main>
 
       </div>

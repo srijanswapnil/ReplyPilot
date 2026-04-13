@@ -1,19 +1,65 @@
-import api from './axios'
+import api from './axios';
 
-export const listPersonas = () =>
-  api.get('/api/personas').then(r => r.data)
 
-export const getPersona = (id) =>
-  api.get(`/api/personas/${id}`).then(r => r.data.data)
+const handlePersonaError = (error, action) => {
+  const message = error.response?.data?.message || error.message || "Failed to process persona request";
+  console.error(`[Persona Service] Error during ${action}:`, message);
+  throw error;
+};
 
-export const createPersona = (data) =>
-  api.post('/api/personas', data).then(r => r.data)
+export const listPersonas = async () => {
+  try {
+    const response = await api.get('/api/personas');
+    return response.data;
+  } catch (error) {
+    handlePersonaError(error, 'listPersonas');
+  }
+};
 
-export const updatePersona = (id, data) =>
-  api.put(`/api/personas/${id}`, data).then(r => r.data)
+export const getPersona = async (id) => {
+  try {
+    const response = await api.get(`/api/personas/${id}`);
+    return response.data.data;
+  } catch (error) {
+    handlePersonaError(error, 'getPersona');
+  }
+};
 
-export const deletePersona = (id) =>
-  api.delete(`/api/personas/${id}`).then(r => r.data)
+export const createPersona = async (data) => {
+  try {
+    const response = await api.post('/api/personas', data);
+    return response.data;
+  } catch (error) {
+    handlePersonaError(error, 'createPersona');
+  }
+};
 
-export const analyzePersona = (bio) =>
-  api.post('/api/personas/analyze', { bio }).then(r => r.data.data)
+export const updatePersona = async (id, data) => {
+  try {
+    const response = await api.put(`/api/personas/${id}`, data);
+    return response.data;
+  } catch (error) {
+    handlePersonaError(error, 'updatePersona');
+  }
+};
+
+export const deletePersona = async (id) => {
+  try {
+    const response = await api.delete(`/api/personas/${id}`);
+    return response.data;
+  } catch (error) {
+    handlePersonaError(error, 'deletePersona');
+  }
+};
+
+/**
+ * Sends a bio to the AI to extract personality traits/tone
+ */
+export const analyzePersona = async (bio) => {
+  try {
+    const response = await api.post('/api/personas/analyze', { bio });
+    return response.data.data;
+  } catch (error) {
+    handlePersonaError(error, 'analyzePersona');
+  }
+};

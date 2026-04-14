@@ -88,11 +88,14 @@ const youtubeSyncWorker = new Worker(
       logger.info(`Successfully synced channel ${channelId}`);
       return { success: true, videosSynced: videos.length };
     } catch (error) {
-      if (error.reAuthNeeded) {
-        logger.warn(`User ${userId} needs to re-authenticate. Skipping sync.`);
+      // Gracefully handle all auth-related failures — these are expected when
+      // users haven't verified their app, revoked access, or tokens expired.
+      const msg = error.message || '';
+      if (error.reAuthNeeded || msg.includes('invalid_grant') || msg.includes('Token has been expired or revoked')) {
+        logger.warn(`User ${userId} needs to re-authenticate for channel ${channelId}. Skipping sync. (${msg})`);
         return { success: false, reason: "reAuthNeeded" };
       }
-      logger.error(`Error in youtube sync worker for channel ${channelId}: ${error.message}`, { errorStack: error.stack });
+      logger.error(`Error in youtube sync worker for channel ${channelId}: ${msg}`, { errorStack: error.stack });
       throw error;
     }
   },

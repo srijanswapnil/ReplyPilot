@@ -6,23 +6,42 @@ import startSyncCronJob from "./src/jobs/syncComments.job.js";
 
 let server;
 let syncCronTask;
-connectdb()
-    .then(() => {
-        syncCronTask = startSyncCronJob();
-        app.on("error", (error) => {
-            console.log("Error!!", error);
-            throw error;
-        });
-        server = app.listen(env.PORT, () => {
-            console.log(
-                `Mongodb is connected successfully to port:${env.PORT}`
+
+const MAX_RETRY_DELAY_MS = 60_000;   // cap at 60 seconds
+const INITIAL_RETRY_DELAY_MS = 5_000; // start at 5 seconds
+
+async function startServer() {
+    let attempt = 0;
+
+    while (true) {
+        try {
+            attempt++;
+            await connectdb();
+
+            syncCronTask = startSyncCronJob();
+            app.on("error", (error) => {
+                console.log("Error!!", error);
+                throw error;
+            });
+            server = app.listen(env.PORT, () => {
+                console.log(
+                    `Mongodb is connected successfully to port:${env.PORT}`
+                );
+            });
+            return; // success — exit the retry loop
+
+        } catch (error) {
+            const delay = Math.min(INITIAL_RETRY_DELAY_MS * 2 ** (attempt - 1), MAX_RETRY_DELAY_MS);
+            console.warn(
+                `Failed to start server (attempt ${attempt}): ${error.message}. ` +
+                `Retrying in ${delay / 1000}s...`
             );
-        });
-    })
-    .catch((error) => {
-        console.log("MONGODB failed to connect!!!", error);
-        process.exit(1);
-    });
+            await new Promise((r) => setTimeout(r, delay));
+        }
+    }
+}
+
+startServer();
 
 ["SIGTERM", "SIGINT"].forEach((sig) =>
     process.on(sig, async () => {

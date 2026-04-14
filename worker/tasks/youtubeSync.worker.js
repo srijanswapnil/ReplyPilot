@@ -61,6 +61,24 @@ const youtubeSyncWorker = new Worker(
           if (transcriptText) {
             await redis.set(keys.ytTranscript(videoId), transcriptText, { EX: 86400 });
             logger.debug(`Cached new transcript for video ${videoId}`);
+
+            // Trigger RAG ingestion
+            try {
+              logger.info(`Triggering RAG ingestion for video ${videoId}`);
+              const axios = (await import('axios')).default;
+              const { env } = await import('../config/env.js');
+              await axios.post(`${env.RAG_SERVICE_URL}/api/v1/ingest`, {
+                video_id: videoId,
+                video_title: item.snippet?.title || null,
+                channel_name: item.snippet?.channelTitle || null,
+                chunk_window_seconds: 60,
+                force_reindex: true
+              });
+              logger.debug(`Successfully triggered RAG ingestion for video ${videoId}`);
+            } catch (ragError) {
+              logger.error(`Failed to trigger RAG ingestion for video ${videoId}: ${ragError.message}`);
+            }
+
           } else {
             logger.warn(`No transcript found or error fetching for video ${videoId}`);
           }

@@ -16,7 +16,7 @@ const AI_SERVICE_URL = env.AI_SERVICE_URL || 'http://localhost:8000';
  */
 export const generateReply = async ({ commentId, commentText, tone = 'friendly', personaId = null, videoContext = '' }) => {
   try {
-    const response = await axios.post(`${AI_SERVICE_URL}/generate`, {
+    const response = await axios.post(`${AI_SERVICE_URL}/api/v1/generate`, {
       comment_id: commentId,
       comment_text: commentText,
       tone,
@@ -46,7 +46,7 @@ export const generateReplyBatch = async (items) => {
       video_context: item.videoContext || '',
     }));
 
-    const response = await axios.post(`${AI_SERVICE_URL}/generate_batch`, payload);
+    const response = await axios.post(`${AI_SERVICE_URL}/api/v1/generate_batch`, payload);
     return response.data;
   } catch (error) {
     console.error('Error calling AI generate_batch service:', error.message);

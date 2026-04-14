@@ -21,6 +21,7 @@ const envSchema=z.object({
     
     CLIENT_URL:z.string().default('http://localhost:5173'),
     AI_SERVICE_URL:z.string().default('http://localhost:8000'),
+    RAG_SERVICE_URL:z.string().default('http://localhost:8001'),
 
     REDIS_URL: z.string().min(1,'REDIS_URL is required!'),
     REDIS_PORT:z.string().default('12764'),

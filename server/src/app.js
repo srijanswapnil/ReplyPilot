@@ -67,8 +67,6 @@ app.use("/health", (req, res) => {
 import authRoute from "./routes/auth.routes.js";
 app.use("/api/auth", authRoute);
 
-import viewRoutes from "./routes/view.routes.js";
-app.use("/", viewRoutes);
 
 import ChannelRoutes from "./routes/Channel.routes.js";
 app.use("/api/channel",ChannelRoutes);

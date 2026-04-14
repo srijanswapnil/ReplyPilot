@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getVideos } from '../api/channel'
-import { listReplies, approveReply, rejectReply, editReply, regenerateReply } from '../api/replies'
+import { listReplies, approveReply, rejectReply, publishReply, editReply, regenerateReply } from '../api/replies'
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -92,6 +92,17 @@ function ReplyCard({ reply, onUpdate }) {
       onUpdate(reply._id, 'rejected')
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to reject')
+    } finally { setLoading(null) }
+  }
+
+  async function handlePublish() {
+    setLoading('publish'); setError(null)
+    try {
+      await publishReply(reply._id)
+      setStatus('publishing')
+      onUpdate(reply._id, 'publishing')
+    } catch (e) {
+      setError(e.response?.data?.error || 'Failed to publish')
     } finally { setLoading(null) }
   }
 
@@ -242,6 +253,14 @@ function ReplyCard({ reply, onUpdate }) {
               {loading === 'reject' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Reject'}
             </button>
           )}
+
+          <button
+            onClick={handlePublish}
+            disabled={!!loading || status === 'rejected'}
+            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500 px-4 py-2 rounded-lg transition-all font-bold border border-blue-500/20 disabled:opacity-40"
+          >
+            {loading === 'publish' ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : 'Publish'}
+          </button>
 
           <div className="flex-1 h-px" /> {/* Spacer */}
 

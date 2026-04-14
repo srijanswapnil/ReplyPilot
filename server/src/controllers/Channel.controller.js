@@ -138,7 +138,7 @@ export async function getVideoComments(req, res, next) {
 
     if (!forceSync && !pageToken && !bulkSync) {
       const filter = { videoId };
-      if (intent) filter.intent = intent;
+      if (intent) filter['intents.label'] = intent;
 
       const dbComments = await Comment.find(filter)
         .sort({ publishedAt: -1 })
@@ -177,4 +177,30 @@ export async function getVideoComments(req, res, next) {
   }
 }
 
+export async function syncVideoComments(req, res, next) {
+  try {
+    const { videoId } = req.params;
+
+    logger.info(`[Force Sync] Starting full comment sync for video ${videoId}`);
+
+    const result = await getVideoCommentsInfo(req.ytToken, videoId, {
+      fetchAll: true,
+    });
+
+    logger.info(`[Force Sync] Completed: ${result.totalSynced} comments synced for video ${videoId}`);
+
+    return res.json({
+      message: `Synced ${result.totalSynced} comments`,
+      totalSynced: result.totalSynced,
+    });
+  } catch (err) {
+    if (err?.response?.data?.error?.errors?.[0]?.reason === 'commentsDisabled') {
+      return res.status(200).json({
+        message: 'Comments are disabled for this video',
+        totalSynced: 0,
+      });
+    }
+    next(err);
+  }
+}
 

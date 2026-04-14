@@ -61,9 +61,13 @@ export async function fetchTranscript(videoId) {
             transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
         }
 
-        const transcriptText = transcriptItems.map(item => item.text).join(' ');
-        logger.debug(`Successfully fetched transcript for video ${videoId} (length: ${transcriptText.length})`);
-        return transcriptText;
+        const transcriptJson = JSON.stringify(transcriptItems.map(item => ({
+            text: item.text,
+            start: item.offset,
+            duration: item.duration
+        })));
+        logger.debug(`Successfully fetched transcript for video ${videoId} (length: ${transcriptJson.length})`);
+        return transcriptJson;
     } catch (error) {
         logger.warn(`Could not fetch any transcript for video ${videoId}: ${error.message}`);
         // Not throwing error because some videos legitimately don't have transcripts, just return null

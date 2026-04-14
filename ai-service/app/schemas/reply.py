@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal, Optional
 
 
@@ -14,6 +14,8 @@ class ReplyRequest(BaseModel):
 
 
 class ReplyResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     comment_id:  str
     reply_text:  str
     tone:        str

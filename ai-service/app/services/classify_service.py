@@ -18,24 +18,31 @@ ALLOWED_INTENTS = [
 
 def get_intent(text: str):
     if classifier:
-        result = classifier(text)[0]
-        label = result['label'].lower()
-        confidence = round(result['score'], 4)
+        results = classifier(text, top_k=None)  # returns all labels sorted by score
+        intents = [
+            {"label": r["label"].lower(), "confidence": round(r["score"], 4)}
+            for r in results
+            if r["label"].lower() in ALLOWED_INTENTS
+        ]
     else:
-        label = "neutral"
-        confidence = 0.99
+        intents = [{"label": "neutral", "confidence": 0.99}]
     
-    # Map label to allowed intents
-    intent = label if label in ALLOWED_INTENTS else "neutral"
+    # Sort by confidence descending
+    intents.sort(key=lambda x: x["confidence"], reverse=True)
+    
+    # Primary intent is the highest confidence one
+    primary = intents[0] if intents else {"label": "neutral", "confidence": 0.0}
     
     return {
-        "intent": intent,
-        "confidence": confidence
+        "intent": primary["label"],
+        "confidence": primary["confidence"],
+        "intents": intents,
     }
 
 def classify_comment(comment: CommentIn) -> dict:
     intent_data = get_intent(comment.text)
     intent = intent_data["intent"]
+    intents = intent_data["intents"]
     
     # Determine spam based on intent or keywords
     if intent == "spam":
@@ -59,6 +66,7 @@ def classify_comment(comment: CommentIn) -> dict:
         "comment_id": comment.comment_id,
         "intent": intent,
         "confidence": intent_data["confidence"],
+        "intents": intents,
         "is_spam": is_spam,
         "spam_score": spam_score,
         "routing": routing

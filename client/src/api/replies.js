@@ -66,6 +66,15 @@ export const rejectReply = async (id) => {
   }
 };
 
+export const publishReply = async (id) => {
+  try {
+    const response = await api.put(`/api/replies/${id}/publish`);
+    return response.data;
+  } catch (error) {
+    handleReplyError(error, 'publishReply');
+  }
+};
+
 /**
  * Re-runs the LLM if the first draft wasn't satisfactory
  */

@@ -4,11 +4,12 @@ import { bullConnection } from '../config/redis.js';
 import Comment from '../models/Comment.models.js';
 import httpClient from '../utils/httpClient.js';
 import logger from '../utils/logger.js';
+import { enqueueGenerateJob } from '../utils/queueHelpers.js';
 
 export const classifyWorker = new Worker(
   'classify',
   async (job) => {
-    const { commentId } = job.data;
+    const { commentId, tone, personaId, videoId } = job.data;
 
     try {
       // 1. Fetch the comment
@@ -18,23 +19,41 @@ export const classifyWorker = new Worker(
       }
 
       // 2. Call AI Service for classification
-      // Assuming a generic endpoint like /api/v1/classify
       const aiResponse = await httpClient.post('/api/v1/classify', {
-        text: comment.text,
+        comment_id: commentId,
+        text: comment.textDisplay || comment.text,
       });
 
-      const { intent = 'neutral', confidence = null } = aiResponse.data;
-      const isSpam = intent === 'spam';
+      const { intents = [], is_spam = false } = aiResponse.data;
 
       // 3. Update the comment with classification results
-      comment.intent = intent;
-      comment.intentConfidence = confidence;
-      comment.isSpam = isSpam;
+      comment.intents = intents.map(i => ({
+        label: i.label?.toLowerCase(),
+        confidence: i.confidence,
+      }));
+      comment.isSpam = is_spam;
       comment.classificationStatus = 'done';
       await comment.save();
 
+      // 4. Chain to generate queue if NOT spam
+      if (!is_spam) {
+        await enqueueGenerateJob(
+          {
+            commentId,
+            tone: tone || 'friendly',
+            personaId: personaId || null,
+            videoId: videoId || comment.videoId,
+          },
+          { jobId: `generate-${commentId}` }
+        );
+        logger.info(`Chained generate job for non-spam comment ${commentId}`);
+      } else {
+        logger.info(`Skipping generate for spam comment ${commentId}`);
+      }
+
       logger.info(`Classify Job ${job.id} completed for comment ${commentId}`);
-      return { success: true, intent, isSpam };
+      const primaryIntent = intents[0]?.label || 'neutral';
+      return { success: true, intent: primaryIntent, isSpam: is_spam };
 
     } catch (error) {
       logger.error(`Classify Job ${job.id} failed:`, error.message);

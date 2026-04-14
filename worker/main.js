@@ -3,22 +3,35 @@ import logger from "./utils/logger.js";
 import workers from "./tasks/index.js";
 import { initScheduler, schedulerWorker } from "./tasks/scheduler.js";
 
+const MAX_RETRY_DELAY_MS = 60_000;   // cap at 60 seconds
+const INITIAL_RETRY_DELAY_MS = 5_000; // start at 5 seconds
+
 async function startWorker() {
-    try {
-        // Connect to Database
-        await connectdb();
-        logger.info("Worker process connected to MongoDB");
+    let attempt = 0;
 
-        // Initialize the recurring scheduler
-        await initScheduler();
+    while (true) {
+        try {
+            attempt++;
+            // Connect to Database
+            await connectdb();
+            logger.info("Worker process connected to MongoDB");
 
-        // The workers are already initialized when imported from ./tasks/index.js
-        // We just need to keep the process alive and handle shutdown
-        logger.info("BullMQ Worker Service started successfully");
+            // Initialize the recurring scheduler
+            await initScheduler();
 
-    } catch (error) {
-        logger.error("Failed to start worker service:", error.message);
-        process.exit(1);
+            // The workers are already initialized when imported from ./tasks/index.js
+            // We just need to keep the process alive and handle shutdown
+            logger.info("BullMQ Worker Service started successfully");
+            return; // success — exit the retry loop
+
+        } catch (error) {
+            const delay = Math.min(INITIAL_RETRY_DELAY_MS * 2 ** (attempt - 1), MAX_RETRY_DELAY_MS);
+            logger.warn(
+                `Failed to start worker service (attempt ${attempt}): ${error.message}. ` +
+                `Retrying in ${delay / 1000}s...`
+            );
+            await new Promise((r) => setTimeout(r, delay));
+        }
     }
 }
 

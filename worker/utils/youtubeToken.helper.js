@@ -65,7 +65,19 @@ export async function getValidYoutubeToken(userId) {
                 logger.debug('Access Token refreshed for user:', userId);
                 resolve(newAccessToken);
             })
-            .catch(reject);
+            .catch((refreshError) => {
+                // Google returns 'invalid_grant' when the refresh token is revoked,
+                // expired, or the app is unverified. Treat these as re-auth needed
+                // so the worker can skip this user gracefully instead of crashing.
+                const msg = refreshError.message || '';
+                if (msg.includes('invalid_grant') || msg.includes('Token has been expired or revoked')) {
+                    const err = new Error(`YouTube token invalid for user ${userId} - re-authentication required (${msg})`);
+                    err.reAuthNeeded = true;
+                    reject(err);
+                } else {
+                    reject(refreshError);
+                }
+            });
     });
 
     // Register synchronously — new Promise() construction is synchronous, so this
@@ -73,7 +85,15 @@ export async function getValidYoutubeToken(userId) {
     ongoingRefreshPromises.set(userId, refreshPromise);
 
     // 5. Clean up on both settle paths so the map never leaks a stale entry.
-    refreshPromise.finally(() => ongoingRefreshPromises.delete(userId));
+    // We add a silent .catch() here solely to prevent Node.js from throwing an
+    // UnhandledPromiseRejection crash if the background promise rejects before 
+    // it gets awaited below.
+    refreshPromise
+      .catch((err) => {
+        // Log background rejection context for faster debugging before swallowing
+        logger.debug(`Background refresh promise rejected for user ${userId}`, { reason: err.message });
+      }) 
+      .finally(() => ongoingRefreshPromises.delete(userId));
 
     return await refreshPromise;
 }

@@ -205,7 +205,7 @@ export const getVideoCommentsInfo = async (accessToken, videoId, options = {}) =
       updateOne: {
         filter: { ytCommentId: c.ytCommentId },
         update: {
-          $setOnInsert: { intent: 'pending', classificationStatus: 'pending' },
+          $setOnInsert: { intents: [], classificationStatus: 'pending' },
           $set: {
             videoId:         c.videoId,
             channelId:       c.channelId,

@@ -4,13 +4,14 @@ import { bullConnection } from '../config/redis.js';
 import Comment from '../models/Comment.models.js';
 import Reply from '../models/Reply.models.js';
 import Persona from '../models/Persona.models.js';
+import Video from '../models/Video.models.js';
 import httpClient from '../utils/httpClient.js';
 import logger from '../utils/logger.js';
 
 export const generateWorker = new Worker(
   'generate',
   async (job) => {
-    const { commentId, tone, personaId } = job.data;
+    const { commentId, tone, personaId, videoId } = job.data;
     let createdReplyId = null;
 
     try {
@@ -28,33 +29,44 @@ export const generateWorker = new Worker(
         }
       }
 
-      // 3. Call AI Service to generate a reply
-      const aiResponse = await httpClient.post('/api/v1/generate', {
-        text: comment.text,
-        tone: tone || 'friendly',
-        personaDescription
-      });
-
-      const generatedText = aiResponse.data.generatedText || aiResponse.data.reply;
-      if (!generatedText) {
-          throw new Error('AI Service did not return generated text');
+      // 3. Build video context
+      let videoContext = '';
+      const vid = await Video.findOne({ videoId: videoId || comment.videoId }).lean();
+      if (vid) {
+        videoContext = `Title: ${vid.title || 'N/A'}. Description: ${(vid.description || '').slice(0, 500)}`;
       }
 
-      // 4. Create the Reply document
-      const reply = new Reply({
-          commentId: comment._id,
-          ytCommentId: comment.ytCommentId,
-          personaId: personaId || null,
-          generatedText,
-          tone: tone || 'friendly',
-          status: 'pending_review' // Defaulting to pending_review
+      // 4. Call AI Service to generate a reply
+      // AI service expects: comment_id, comment_text, tone, persona_id, video_context
+      // AI service returns: comment_id, reply_text, tone, model_used, char_count
+      const aiResponse = await httpClient.post('/api/v1/generate', {
+        comment_id: commentId,
+        comment_text: comment.textDisplay || comment.text,
+        tone: tone || 'friendly',
+        persona_id: personaId || null,
+        video_context: videoContext,
       });
 
-      await reply.save();
-      createdReplyId = reply._id;
+      const generatedText = aiResponse.data.reply_text;
+      if (!generatedText) {
+          throw new Error('AI Service did not return reply_text');
+      }
 
-      // OPTIONAL: If auto-post feature is enabled contextually, we would queue it to postReplyQueue here.
-      // But adhering to standard review pipeline, we leave it in 'pending_review'.
+      // 5. Create or update the Reply document
+      const reply = await Reply.findOneAndUpdate(
+        { commentId: comment._id },
+        {
+          commentId: comment._id,
+          ytCommentId: comment.ytCommentId,
+          personaId: personaId || undefined,
+          generatedText,
+          tone: aiResponse.data.tone || tone || 'friendly',
+          status: 'pending_review',
+        },
+        { upsert: true, new: true }
+      );
+
+      createdReplyId = reply._id;
 
       logger.info(`Generate Job ${job.id} completed for comment ${commentId}`);
       return { success: true, replyId: reply._id };

@@ -54,7 +54,7 @@ export async function enqueueBatch(req, res, next) {
             tone,
             personaId: personaId || null,
           },
-          opts: { jobId: `classify:${c._id.toString()}` },
+          opts: { jobId: `classify-${c._id.toString()}` },
         }));
         await enqueueClassifyBulk(jobs);
       }

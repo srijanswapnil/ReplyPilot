@@ -42,3 +42,12 @@ export const getVideoComments = async (videoId, params = {}) => {
     handleError(error, 'getVideoComments');
   }
 };
+
+export const syncVideoComments = async (videoId) => {
+  try {
+    const response = await api.post(`/api/channel/videos/${videoId}/comments/sync`);
+    return response.data;
+  } catch (error) {
+    handleError(error, 'syncVideoComments');
+  }
+};

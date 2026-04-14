@@ -3,7 +3,7 @@ import Comment from "../models/Comment.models.js";
 import axios from "axios";
 
 
-const VALID_INTENTS = ['question', 'praise', 'criticism', 'spam', 'neutral', 'pending'];
+const VALID_INTENTS = ['question', 'praise', 'criticism', 'spam', 'neutral'];
 const VALID_SORT    = ['publishedAt', 'likeCount'];
 
 export const classifyComment = async (req, res, next) => {
@@ -15,22 +15,24 @@ export const classifyComment = async (req, res, next) => {
     if (!comment) return res.status(404).json({ error: 'Comment not found' });
 
     // 2. Call your FastAPI AI Service
-    // Ensure your FastAPI is running on port 8000
-    const aiResponse = await axios.post(`${env.AI_SERVICE_URL}/classify`, {
+    const aiResponse = await axios.post(`${env.AI_SERVICE_URL}/api/v1/classify`, {
       comment_id: id,
-      text: comment.textDisplay || comment.content // Match your Schema field name
+      text: comment.textDisplay || comment.text,
     });
 
-    const { intent } = aiResponse.data;
+    const { intents = [], is_spam = false } = aiResponse.data;
 
-    // 3. Normalize intent to lowercase to match your VALID_INTENTS array
-    const normalizedIntent = intent.toLowerCase();
+    // 3. Normalize intents array
+    const normalizedIntents = (intents || [])
+      .filter(i => VALID_INTENTS.includes(i.label?.toLowerCase()))
+      .map(i => ({ label: i.label.toLowerCase(), confidence: i.confidence }));
 
     // 4. Update the database with the AI result
     const updatedComment = await Comment.findByIdAndUpdate(
       id,
       { 
-        intent: VALID_INTENTS.includes(normalizedIntent) ? normalizedIntent : 'neutral', 
+        intents: normalizedIntents,
+        isSpam: is_spam,
         classificationStatus: 'done' 
       },
       { new: true }
@@ -66,7 +68,9 @@ export const listComments = async (req,res,next)=>{
     }
 
     const filter = { videoId };
-    if (intent && VALID_INTENTS.includes(intent)) filter.intent = intent;
+    if (intent && VALID_INTENTS.includes(intent)) {
+      filter['intents.label'] = intent;
+    }
     if (status) filter.classificationStatus = status;
 
     const pageNum  = Math.max(1, Number(page));
@@ -110,14 +114,21 @@ export const getComment = async (req,res,next)=>{
 
 export const updateCommentIntent = async (req,res,next)=>{
   try {
-    const { intent } = req.body;
-    if (!intent || !VALID_INTENTS.includes(intent)) {
-      return res.status(400).json({ error: `intent must be one of: ${VALID_INTENTS.join(', ')}` });
+    const { intents } = req.body;
+
+    // Support both old single-intent format and new multi-intent format
+    if (!intents || !Array.isArray(intents) || intents.length === 0) {
+      return res.status(400).json({ error: 'intents must be an array of {label, confidence} objects' });
+    }
+
+    const valid = intents.every(i => VALID_INTENTS.includes(i.label) && typeof i.confidence === 'number');
+    if (!valid) {
+      return res.status(400).json({ error: `Each intent label must be one of: ${VALID_INTENTS.join(', ')} with a numeric confidence` });
     }
 
     const comment = await Comment.findByIdAndUpdate(
       req.params.id,
-      { intent, classificationStatus: 'done' },
+      { intents, classificationStatus: 'done' },
       { new: true }
     );
     if (!comment) return res.status(404).json({ error: 'Comment not found' });
@@ -127,3 +138,4 @@ export const updateCommentIntent = async (req,res,next)=>{
     next(err);
   }
 }
+

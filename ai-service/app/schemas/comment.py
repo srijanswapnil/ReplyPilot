@@ -7,10 +7,16 @@ class CommentIn(BaseModel):
     text:       str = Field(..., min_length=1, max_length=10_000)
 
 
+class IntentScore(BaseModel):
+    label:      str
+    confidence: float = Field(..., ge=0.0, le=1.0)
+
+
 class CommentOut(BaseModel):
     comment_id:  str
     intent:      Literal["spam", "praise", "criticism", "neutral", "question"]
     confidence:  float = Field(..., ge=0.0, le=1.0)
+    intents:     list[IntentScore] = Field(default_factory=list, description="All intents with confidence scores")
     is_spam:     bool
     # spam_score is separate from intent confidence —
     # a comment can be "criticism" with high confidence but still flagged spam

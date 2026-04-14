@@ -163,6 +163,25 @@ function ConfirmStep({ analysis, editingPersona, onSave, onBack }) {
   const [systemPrompt, setSystemPrompt] = useState(analysis.systemPrompt ?? editingPersona?.systemPrompt ?? editingPersona?.bio ?? '')
   const [isDefault, setIsDefault] = useState(editingPersona?.isDefault ?? false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  const canSubmit = name.trim().length > 0 && systemPrompt.trim().length > 0 && !saving
+
+  const handleSubmit = async () => {
+    if (!name.trim() || !systemPrompt.trim()) {
+      setError('Both a display name and persona prompt are required.');
+      return;
+    }
+    setError(null)
+    setSaving(true)
+    try {
+      await onSave({ name, tone, systemPrompt, isDefault })
+    } catch (e) {
+      setError(e.message || 'Failed to save persona.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
@@ -206,11 +225,14 @@ function ConfirmStep({ analysis, editingPersona, onSave, onBack }) {
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest text-[#8b949e] group-hover:text-white">Active Default</span>
           </label>
-          <div className="flex gap-3">
-             <button onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-[#8b949e] hover:text-white px-4">Back</button>
-             <button onClick={() => onSave({ name, tone, systemPrompt, isDefault })} className="bg-[#ff4444] hover:bg-[#ff6666] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#ff4444]/20 active:scale-95">
-                {editingPersona ? 'Update' : 'Deploy'}
-             </button>
+          <div className="flex flex-col gap-3">
+            {error && <p className="text-[11px] text-red-400 uppercase tracking-[0.2em]">{error}</p>}
+            <div className="flex gap-3">
+              <button onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-[#8b949e] hover:text-white px-4">Back</button>
+              <button disabled={!canSubmit} onClick={handleSubmit} className="bg-[#ff4444] hover:bg-[#ff6666] disabled:opacity-50 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#ff4444]/20 active:scale-95">
+                {saving ? 'Saving...' : editingPersona ? 'Update' : 'Deploy'}
+              </button>
+            </div>
           </div>
       </div>
     </div>

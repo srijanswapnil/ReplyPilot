@@ -100,7 +100,7 @@ export const listComments = async (req,res,next)=>{
   } catch (err) {
     next(err);
   }
-}
+};
 
 export const getComment = async (req,res,next)=>{
   try {
@@ -110,7 +110,7 @@ export const getComment = async (req,res,next)=>{
   } catch (err) {
     next(err);
   }
-}
+};
 
 export const updateCommentIntent = async (req,res,next)=>{
   try {
@@ -137,5 +137,5 @@ export const updateCommentIntent = async (req,res,next)=>{
   } catch (err) {
     next(err);
   }
-}
+};
 

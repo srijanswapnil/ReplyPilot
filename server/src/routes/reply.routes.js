@@ -6,6 +6,7 @@ import {
   editReply,
   approveReply,
   rejectReply,
+  publishReply,
   regenerateReply,
 } from "../controllers/reply.controller.js";
 import authMiddleware from "../middleware/auth.middleware.js";
@@ -32,6 +33,9 @@ router.route("/:replyId/approve")
 
 router.route("/:replyId/reject")
   .put(rejectReply);
+
+router.route("/:replyId/publish")
+  .put(publishReply);
 
 router.route("/:replyId/regenerate")
   .post(regenerateReply);

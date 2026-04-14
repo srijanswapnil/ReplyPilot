@@ -3,7 +3,7 @@ import Reply from '../models/Reply.models.js';
 import Video from '../models/Video.models.js';
 import Persona from '../models/Persona.models.js';
 import { generateReply } from '../services/replyService.js';
-import { enqueueGenerateJob } from '../services/queue.service.js';
+import { enqueueGenerateJob, enqueuePostReplyJob } from '../services/queue.service.js';
 import logger from '../utils/logger.js';
 
 const VALID_TONES = [
@@ -194,6 +194,27 @@ export async function rejectReply(req, res, next) {
     );
     if (!reply) return res.status(404).json({ error: 'Reply not found' });
     return res.json({ message: 'Reply rejected', data: reply });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ─── Publish a reply ────────────────────────────────────────────────────────
+
+export async function publishReply(req, res, next) {
+  try {
+    const reply = await Reply.findById(req.params.replyId);
+    if (!reply) return res.status(404).json({ error: 'Reply not found' });
+
+    reply.status = 'publishing';
+    if (!reply.finalText) {
+      reply.finalText = reply.editedText || reply.generatedText;
+    }
+    await reply.save();
+
+    await enqueuePostReplyJob({ replyId: reply._id.toString() });
+
+    return res.json({ message: 'Reply queued for publishing', data: reply });
   } catch (err) {
     next(err);
   }

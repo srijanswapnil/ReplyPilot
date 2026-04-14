@@ -48,16 +48,27 @@ schedulerWorker.on('failed', (job, err) => {
 });
 
 export async function initScheduler() {
-  logger.info('Initializing Daily YouTube Scheduler (Cron 0 0 * * *)');
-  // Runs every day at midnight (0 0 * * *)
+  logger.info('Initializing Daily YouTube Scheduler (Cron 0 */2 * * *)');
+  
+  // Runs every 2 hours (0 */2 * * *)
   await dailySchedulerQueue.add(
     'dispatch-youtube-sync',
     {},
     {
       repeat: {
-        pattern: '0 0 * * *' 
+        pattern: '0 */2 * * *' 
       },
       jobId: 'master-daily-dispatcher'
+    }
+  );
+
+  // Run immediately on application start
+  logger.info('Triggering immediate initial sync run on startup...');
+  await dailySchedulerQueue.add(
+    'dispatch-youtube-sync',
+    {},
+    {
+      jobId: `master-daily-dispatcher-startup-${Date.now()}` // Unique ID so it doesn't conflict
     }
   );
 }

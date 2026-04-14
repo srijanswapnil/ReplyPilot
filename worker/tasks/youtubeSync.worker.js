@@ -52,13 +52,18 @@ const youtubeSyncWorker = new Worker(
         );
         logger.debug(`Successfully upserted video ${videoId}`);
 
-        // Fetch and cache transcript
-        const transcriptText = await fetchTranscript(videoId);
-        if (transcriptText) {
-          await redis.set(keys.ytTranscript(videoId), transcriptText, { EX: 86400 });
-          logger.debug(`Cached transcript for video ${videoId}`);
+        // Fetch and cache transcript if not already in Redis
+        const existingTranscript = await redis.get(keys.ytTranscript(videoId));
+        if (existingTranscript) {
+          logger.debug(`Transcript for video ${videoId} already exists in Redis, skipping fetch.`);
         } else {
-          logger.warn(`No transcript found or error fetching for video ${videoId}`);
+          const transcriptText = await fetchTranscript(videoId);
+          if (transcriptText) {
+            await redis.set(keys.ytTranscript(videoId), transcriptText, { EX: 86400 });
+            logger.debug(`Cached new transcript for video ${videoId}`);
+          } else {
+            logger.warn(`No transcript found or error fetching for video ${videoId}`);
+          }
         }
       }
 

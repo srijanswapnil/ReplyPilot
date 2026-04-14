@@ -1,5 +1,5 @@
-import { Outlet, NavLink, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { Outlet, NavLink, Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 const nav = [
@@ -10,8 +10,30 @@ const nav = [
 ]
 
 export default function AppLayout() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const { user } = useAuth()
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/videos')) {
+      setSearchQuery(searchParams.get('search') || '')
+    }
+  }, [location.pathname, searchParams])
+
+  const handleSearchSubmit = () => {
+    const query = searchQuery.trim()
+    if (!query) return
+    navigate(`/videos?search=${encodeURIComponent(query)}`)
+  }
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleSearchSubmit()
+    }
+  }
 
   return (
     <div className="flex h-screen bg-[#0d1117] text-white overflow-hidden font-sans selection:bg-[#ff4444]/30">
@@ -70,6 +92,7 @@ export default function AppLayout() {
               className="bg-[#0d1117] border border-[#30363d] rounded-full py-1.5 pl-10 pr-4 text-sm w-80 focus:outline-none focus:border-[#ff4444] focus:ring-1 focus:ring-[#ff4444]/50 transition-all placeholder:text-[#484f58]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
             />
           </div>
 

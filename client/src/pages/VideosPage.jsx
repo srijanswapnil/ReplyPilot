@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getVideos } from '../api/channel'
 
 // ── Format large numbers ───────────────────────────────────────────────────
@@ -104,10 +104,11 @@ function VideoCard({ video, onClick, index }) {
 
 export default function VideosPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [videos, setVideos]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
-  const [search, setSearch]   = useState('')
+  const [search, setSearch]   = useState(searchParams.get('search') || '')
   const [sortBy, setSortBy]   = useState('date') 
   const [syncing, setSyncing] = useState(false)
 
@@ -127,6 +128,10 @@ export default function VideosPage() {
   }
 
   useEffect(() => { fetchVideos() }, [])
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '')
+  }, [searchParams])
 
   const filtered = useMemo(() => {
     let list = [...videos]

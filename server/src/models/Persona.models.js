@@ -26,18 +26,10 @@ const PersonaSchema = new mongoose.Schema(
             ],
             default: 'friendly'
         },
-        systemPrompt: { type: String },
+        creatorBio: { type: String,default: null },
+        // Words/phrases the creator naturally uses
+        // Injected into the prompt: "Use these naturally: bhai, let's gooo"
         vocabulary: [{ type: String }],
-        examples: [
-            {
-                commentText: { type: String },
-                replyText: { type: String },
-            }
-        ],
-        isDefault: {
-            type: Boolean,
-            default: false
-        }
     },
     { timestamps: true }
 );

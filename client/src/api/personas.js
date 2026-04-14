@@ -2,15 +2,15 @@ import api from './axios';
 
 
 const handlePersonaError = (error, action) => {
-  const message = error.response?.data?.message || error.message || "Failed to process persona request";
+  const message = error.response?.data?.error || error.response?.data?.message || error.message || "Failed to process persona request";
   console.error(`[Persona Service] Error during ${action}:`, message);
-  throw error;
+  throw new Error(message);
 };
 
 export const listPersonas = async () => {
   try {
     const response = await api.get('/api/personas');
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handlePersonaError(error, 'listPersonas');
   }
@@ -28,7 +28,7 @@ export const getPersona = async (id) => {
 export const createPersona = async (data) => {
   try {
     const response = await api.post('/api/personas', data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handlePersonaError(error, 'createPersona');
   }
@@ -37,7 +37,7 @@ export const createPersona = async (data) => {
 export const updatePersona = async (id, data) => {
   try {
     const response = await api.put(`/api/personas/${id}`, data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     handlePersonaError(error, 'updatePersona');
   }
